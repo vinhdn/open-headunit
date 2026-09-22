@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
 import android.os.SystemClock
+import com.andrerinas.openheadunit.App
 import android.util.SparseIntArray
 import android.view.KeyEvent
 import com.andrerinas.openheadunit.aap.protocol.Channel
@@ -124,6 +125,14 @@ class AapTransport(
 
     // Messages refused because the backlog was already at its ceiling. See VIDEO_BACKLOG_LIMIT.
     private val videoShedTotal = java.util.concurrent.atomic.AtomicLong(0)
+
+    /**
+     * The auxiliary display's video, built on its first message because a session may not have one.
+     * Its own lane rather than a share of the main video thread: [AapVideo]'s reassembly state is
+     * per stream, and the two streams' fragment runs interleave on one connection.
+     */
+    @Volatile
+    private var auxVideoLane: VideoLane? = null
     private val micRecorder: MicRecorder = MicRecorder(context)
     private val sessionIds = SparseIntArray(4)
     private val startedSensors = HashSet<Int>(4)
@@ -789,6 +798,8 @@ class AapTransport(
     /** Observations belong to the new link and are reset before workers can report traffic. */
     private fun resetSessionObservations() {
         lastMessageReceivedMs = 0L
+        lastAuxCycleMs = 0L
+        auxCycleStopExpected = false
         linkGapMonitor.reset()
         videoGapMonitor.reset()
         audioGapMonitor.reset()
@@ -818,9 +829,11 @@ class AapTransport(
             cleanupStep("microphone") { retireMicrophone() }
             sendHandler?.removeCallbacks(focusCycleGainRunnable)
             sendHandler?.removeCallbacks(unrepairedCheckRunnable)
+            sendHandler?.removeCallbacks(auxCycleGainRunnable)
             pollThread?.quit()
             sendThread?.quit()
             videoThread?.quit()
+            auxVideoLane?.quit()
             // Unblock in-flight handshake/read/write before waiting. stop() already allowed
             // the ByeBye send its grace period; natural EOF has nothing left to send.
             cleanupStep("connection") { connection?.disconnect() }
@@ -828,6 +841,7 @@ class AapTransport(
             for (worker in listOfNotNull(pollThread, sendThread, videoThread)) {
                 if (Thread.currentThread() !== worker) awaitUninterruptibly { worker.join() }
             }
+            auxVideoLane?.join(1000)
             cleanupStep("audio") { aapAudio.releaseAllFocus() }
             cleanupStep("focus cycle") { endFocusCycle() }
             synchronized(videoDecoder) {
@@ -837,6 +851,10 @@ class AapTransport(
                 if (videoDecoder.onKeyframeObserved === keyframeObservedCallback) videoDecoder.onKeyframeObserved = null
             }
             cleanupStep("video") { aapVideo.release() }
+            // After the join: resetting run state under a thread still assembling hands the next
+            // session a half-run.
+            cleanupStep("auxiliary video") { auxVideoLane?.release() }
+            auxVideoLane = null
             videoBufferPool.clear()
             videoBacklog.set(0)
             videoShedTotal.set(0)
@@ -897,7 +915,10 @@ class AapTransport(
      * the window we announce, though: with the feed held, a phone told `max_unacked=12` ran the
      * backlog to 256, so [VIDEO_BACKLOG_LIMIT] is the real ceiling.
      */
-    internal fun dispatchVideo(message: AapMessage): Boolean {
+    internal fun dispatchVideo(message: AapMessage): Boolean =
+        if (message.channel == Channel.ID_VID2) auxLane()?.dispatch(message) ?: false else dispatchMainVideo(message)
+
+    private fun dispatchMainVideo(message: AapMessage): Boolean {
         val isPayload = aapVideo.isPayload(message)
         val acks = AapMessageFraming.completesMediaData(message.type, message.flags.toInt())
         // Capture ownership at receipt. A later MediaStart can replace the channel's session
@@ -939,6 +960,59 @@ class AapTransport(
             }
         }
         return isPayload
+    }
+
+    @Volatile private var lastAuxCycleMs = 0L
+    @Volatile private var auxCycleStopExpected = false
+
+    private val auxCycleGainRunnable = Runnable {
+        send(VideoFocusEvent(gain = true, unsolicited = true, channel = Channel.ID_VID2))
+    }
+
+    /**
+     * A keyframe for the second display, by a focus cycle on its own channel only.
+     * Separate from the main picture's lever and budget: it touches nothing the driver is watching.
+     */
+    @Synchronized
+    internal fun requestAuxKeyframe(reason: String) {
+        if (auxVideoLane == null) return
+        val handler = sendHandler ?: return
+        val now = SystemClock.elapsedRealtime()
+        if (!SecondaryVideoFocusPolicy.mayCycleAux(now, lastAuxCycleMs)) return
+        lastAuxCycleMs = now
+        AppLog.i("AapTransport: cycling the auxiliary display's video focus for a keyframe ($reason)")
+        auxCycleStopExpected = true
+        send(VideoFocusEvent(gain = false, unsolicited = false, channel = Channel.ID_VID2))
+        handler.removeCallbacks(auxCycleGainRunnable)
+        handler.postDelayed(auxCycleGainRunnable, SecondaryVideoFocusPolicy.AUX_CYCLE_GAP_MS)
+    }
+
+    /** Whether the auxiliary sink stop just received was the one [requestAuxKeyframe] asked for. */
+    internal fun consumeAuxCycleStop(): Boolean {
+        val expected = auxCycleStopExpected
+        auxCycleStopExpected = false
+        return expected
+    }
+
+    /**
+     * The auxiliary lane, created on demand and only where one was advertised.
+     *
+     * Null means the phone sent on a channel we never offered, which is handled by ignoring it: an
+     * auxiliary display must never be able to cost the main session.
+     */
+    @Synchronized
+    private fun auxLane(): VideoLane? {
+        auxVideoLane?.let { return it }
+        if (closing || !settings.auxDisplayEnabled) return null
+        val decoder = App.provide(context).requireAuxVideoDecoder()
+        // Recovery cycles focus on this channel alone, so the main picture never pays for it.
+        val onCorrupted = { requestAuxKeyframe("a corrupt frame") }
+        val lane = VideoLane(Channel.ID_VID2, AapVideo(decoder, settings, onFrameCorrupted = onCorrupted),
+            "AapTransport:Handler::VideoAux", ::getSessionId) { channel, session -> sendMediaAck(channel, session) }
+        lane.start()
+        auxVideoLane = lane
+        AppLog.i("AapTransport: the auxiliary display's video lane is open")
+        return lane
     }
 
     /** Video messages handed over and not yet processed. See [TransportDispatchMonitor]. */
