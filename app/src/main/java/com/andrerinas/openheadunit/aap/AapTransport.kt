@@ -22,6 +22,8 @@ import com.andrerinas.openheadunit.aap.protocol.messages.Messages
 import com.andrerinas.openheadunit.aap.protocol.messages.ScrollWheelEvent
 import com.andrerinas.openheadunit.aap.protocol.messages.SensorEvent
 import com.andrerinas.openheadunit.aap.protocol.messages.VideoFocusEvent
+import com.andrerinas.openheadunit.secondscreen.SecondScreenHub
+import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
 import com.andrerinas.openheadunit.decoder.audio.MicrophonePolicy
 import com.andrerinas.openheadunit.decoder.video.FocusCycleLever
 import com.andrerinas.openheadunit.decoder.video.KeyframeCycleEscalationPolicy
@@ -854,6 +856,7 @@ class AapTransport(
             // After the join: resetting run state under a thread still assembling hands the next
             // session a half-run.
             cleanupStep("auxiliary video") { auxVideoLane?.release() }
+            cleanupStep("second screen") { SecondScreenHub.close() }
             auxVideoLane = null
             videoBufferPool.clear()
             videoBacklog.set(0)
@@ -1004,11 +1007,18 @@ class AapTransport(
     private fun auxLane(): VideoLane? {
         auxVideoLane?.let { return it }
         if (closing || !settings.auxDisplayEnabled) return null
-        val decoder = App.provide(context).requireAuxVideoDecoder()
+        val output = SecondScreenHub.announced ?: return null
         // Recovery cycles focus on this channel alone, so the main picture never pays for it.
         val onCorrupted = { requestAuxKeyframe("a corrupt frame") }
-        val lane = VideoLane(Channel.ID_VID2, AapVideo(decoder, settings, onFrameCorrupted = onCorrupted),
-            "AapTransport:Handler::VideoAux", ::getSessionId) { channel, session -> sendMediaAck(channel, session) }
+        // A forwarding output gets the stream as it arrives and no decoder is built for it.
+        val video = if (SecondScreenOutputPolicy.decodesOnHeadUnit(output)) {
+            AapVideo(App.provide(context).requireAuxVideoDecoder(), settings, onFrameCorrupted = onCorrupted)
+        } else {
+            AapVideo(null, settings, { buf, off, len -> SecondScreenHub.encoded()?.onAccessUnit(buf, off, len) }, onCorrupted)
+        }
+        val lane = VideoLane(Channel.ID_VID2, video, "AapTransport:Handler::VideoAux", ::getSessionId) { channel, session ->
+            sendMediaAck(channel, session)
+        }
         lane.start()
         auxVideoLane = lane
         AppLog.i("AapTransport: the auxiliary display's video lane is open")
@@ -1116,6 +1126,7 @@ class AapTransport(
             onAaPlaybackStatus
         )
         pollHandler?.sendEmptyMessage(MSG_POLL)
+        SecondScreenHub.open(context, settings) { requestAuxKeyframe("the second screen asked for one") }
     }
 
     private fun handshake(connection: ProjectionConnection): Boolean {
