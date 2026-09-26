@@ -59,7 +59,7 @@ object UsbRootPermissionGranter {
             }
 
             val granted = withContext(Dispatchers.IO) {
-                attemptForceGrant(context, suExecutor, usbManager, device)
+                attemptForceGrant(context, usbManager, device)
             }
             if (granted) {
                 AppLog.i("UsbRootPermissionGranter: root grant succeeded for $deviceName")
@@ -72,7 +72,6 @@ object UsbRootPermissionGranter {
 
     private suspend fun attemptForceGrant(
         context: Context,
-        suExecutor: SUExecutor,
         usbManager: UsbManager,
         device: UsbDevice,
     ): Boolean {
@@ -87,7 +86,24 @@ object UsbRootPermissionGranter {
             "CLASSPATH=\"\$apk\" app_process /system/bin $HELPER_CLASS " +
             "$uid ${device.vendorId} ${device.productId} '${device.deviceName}'"
 
-        val exitCode = suExecutor.execShell(cmd, asRootUser = true)
+        // Deliberately not SUExecutor.execShell(): that goes through libsu's persistent,
+        // interactively-piped su session, which some plain AOSP/toybox su builds (the ones that
+        // only understand one-shot `su [UID] [COMMAND...]`, no `-c` flag and no `--mount-master`)
+        // don't behave as libsu expects - the check command ("id") happens to work, ours silently
+        // didn't. A single one-shot `su 0 sh -c <cmd>` matches that su's own --help exactly and is
+        // what was confirmed working by hand against this exact device.
+        val exitCode = try {
+            val process = Runtime.getRuntime().exec(arrayOf("su", "0", "sh", "-c", cmd))
+            val stdout = process.inputStream.bufferedReader().readText()
+            val stderr = process.errorStream.bufferedReader().readText()
+            val code = process.waitFor()
+            if (stdout.isNotBlank()) AppLog.i("UsbRootPermissionGranter: helper stdout: $stdout")
+            if (stderr.isNotBlank()) AppLog.w("UsbRootPermissionGranter: helper stderr: $stderr")
+            code
+        } catch (e: Exception) {
+            AppLog.e("UsbRootPermissionGranter: failed to exec su: ${e.message}", e)
+            -1
+        }
         AppLog.i("UsbRootPermissionGranter: helper exit=$exitCode for ${UsbDeviceCompat(device).uniqueName}")
 
         // hasPermission() only reflects the other process's grant once it lands in this app's
@@ -100,7 +116,7 @@ object UsbRootPermissionGranter {
     }
 
     /** Re-fires the same "permission granted" event the real system dialog would have sent. */
-    private fun replayGrantBroadcast(context: Context, device: UsbDevice) {
+    fun replayGrantBroadcast(context: Context, device: UsbDevice) {
         val intent = Intent(UsbReceiver.ACTION_USB_DEVICE_PERMISSION).apply {
             setPackage(context.packageName)
             putExtra(UsbManager.EXTRA_DEVICE, device)

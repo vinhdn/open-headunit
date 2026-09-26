@@ -139,6 +139,11 @@ class UsbLauncherManager(val service: AapService) {
         AppLog.i("Requesting USB permission for ${UsbDeviceCompat(device).uniqueName}")
         ConnectionStageTracker.report(ConnectionStage.USB_SWITCHING)
 
+        if (UsbManageUsbPermissionGranter.grant(service, usbManager, device)) {
+            UsbRootPermissionGranter.replayGrantBroadcast(service, device)
+            return
+        }
+
         try {
             ToastUtils.showToast(service, service.getString(R.string.requesting_usb_permission), Toast.LENGTH_SHORT)
             usbManager.requestPermission(device, permissionIntent)

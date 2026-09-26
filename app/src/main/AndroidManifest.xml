@@ -61,6 +61,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
+    <!--
+        signature|privileged: a no-op unless this build is installed under /system/priv-app with
+        this permission whitelisted in a privapp-permissions XML (confirmed via `pm list
+        permissions -f` on the target head unit - the "privileged" half of that check does not
+        need the platform's own signing key). See UsbManageUsbPermissionGranter.
+    -->
+    <uses-permission
+        android:name="android.permission.MANAGE_USB"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
     <uses-permission android:name="android.permission.BLUETOOTH" />

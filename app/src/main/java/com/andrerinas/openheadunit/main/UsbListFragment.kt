@@ -30,6 +30,7 @@ import com.andrerinas.openheadunit.aap.AapService
 import com.andrerinas.openheadunit.connection.usb.UsbAccessoryMode
 import com.andrerinas.openheadunit.connection.usb.UsbDeviceCompat
 import com.andrerinas.openheadunit.connection.usb.UsbDeviceDiagnostics
+import com.andrerinas.openheadunit.connection.usb.UsbManageUsbPermissionGranter
 import com.andrerinas.openheadunit.connection.usb.UsbReceiver
 import com.andrerinas.openheadunit.connection.usb.UsbRootPermissionGranter
 import com.andrerinas.openheadunit.utils.Settings
@@ -258,6 +259,8 @@ class UsbListFragment : Fragment() {
                                 notifyDataSetChanged()
                             }
                         }
+                    } else if (UsbManageUsbPermissionGranter.grant(mContext, usbManager, device.wrappedDevice)) {
+                        UsbRootPermissionGranter.replayGrantBroadcast(mContext, device.wrappedDevice)
                     } else {
                         ToastUtils.showToast(mContext, R.string.requesting_usb_permission, Toast.LENGTH_SHORT)
                         ContextCompat.startForegroundService(mContext, Intent(mContext, AapService::class.java))
