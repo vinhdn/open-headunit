@@ -142,6 +142,12 @@ class UsbLauncherManager(val service: AapService) {
         try {
             ToastUtils.showToast(service, service.getString(R.string.requesting_usb_permission), Toast.LENGTH_SHORT)
             usbManager.requestPermission(device, permissionIntent)
+            // Some custom AOSP head units ship a broken/missing system USB permission dialog:
+            // requestPermission() then does nothing at all. If root is available, this steps in
+            // once the real dialog has had a fair chance to answer.
+            UsbRootPermissionGranter.scheduleFallback(
+                service.serviceScope, service, App.provide(service).suExecutor, usbManager, device
+            )
         } catch (e: Exception) {
             AppLog.e("Failed to request USB permission: ${e.message}. This device might not support USB permission dialogs.", e)
             ToastUtils.showToast(service, service.getString(R.string.error_usb_permission_failed), Toast.LENGTH_LONG)

@@ -43,6 +43,7 @@ captures/
 
 # Secrets configuration file
 secrets.properties
+key.properties
 
 src/main/obj
 src/main/libs/armeabi/gdb.setup

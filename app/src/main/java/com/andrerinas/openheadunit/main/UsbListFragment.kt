@@ -31,6 +31,7 @@ import com.andrerinas.openheadunit.connection.usb.UsbAccessoryMode
 import com.andrerinas.openheadunit.connection.usb.UsbDeviceCompat
 import com.andrerinas.openheadunit.connection.usb.UsbDeviceDiagnostics
 import com.andrerinas.openheadunit.connection.usb.UsbReceiver
+import com.andrerinas.openheadunit.connection.usb.UsbRootPermissionGranter
 import com.andrerinas.openheadunit.utils.Settings
 import com.andrerinas.openheadunit.utils.ToastUtils
 import com.google.android.material.appbar.MaterialToolbar
@@ -263,6 +264,12 @@ class UsbListFragment : Fragment() {
                         usbManager.requestPermission(
                             device.wrappedDevice,
                             UsbReceiver.createPermissionPendingIntent(mContext)
+                        )
+                        // Some custom AOSP head units never show this dialog at all; if root is
+                        // available, fall back to granting it directly once it's clear the system
+                        // dialog isn't going to answer.
+                        UsbRootPermissionGranter.scheduleFallback(
+                            scope, mContext, App.provide(mContext).suExecutor, usbManager, device.wrappedDevice
                         )
                     }
                 }

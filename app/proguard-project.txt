@@ -29,6 +29,13 @@
 # Keep specific app classes if needed (e.g. accessed via JNI or reflection)
 # -keep class com.andrerinas.openheadunit.decoder.** { *; }
 
+# --- Root-invoked helper (see UsbRootPermissionGranter) ---
+# Reached via `app_process <classpath> UsbGrantHelperKt` from a root shell, never from normal
+# app code, so it would otherwise be stripped as unused.
+-keep class com.andrerinas.openheadunit.root.UsbGrantHelperKt {
+    public static void main(java.lang.String[]);
+}
+
 # --- JNI ---
 -keep class com.andrerinas.openheadunit.aap.AapSslNative { *; }
 -keep class com.andrerinas.openheadunit.decoder.video.FfmpegHevcDecoder { *; }
