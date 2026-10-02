@@ -9,6 +9,8 @@
     <string name="allowed">Разрешить</string>
     <string name="ignored">Игнорировать</string>
     <string name="exit">Выход</string>
+    <string name="apps">Приложения</string>
+    <string name="no_apps_found">Приложения не найдены</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">Автономный режим</string>
     <string name="to_android_auto">В Android Auto</string>
@@ -281,6 +283,17 @@
     <string name="about">Справка и поддержка</string>
     <string name="about_description">Узнать больше о Open Headunit</string>
     <string name="version">Версия</string>
+    <string name="check_for_updates">Проверить обновления</string>
+    <string name="check_for_updates_description">Проверить наличие более новой версии Open Headunit</string>
+    <string name="checking_for_updates">Проверка обновлений…</string>
+    <string name="update_available_title">Доступно обновление</string>
+    <string name="update_available_playstore_message">Доступна новая версия (%1$s). Перейдите в Google Play Store, чтобы обновить приложение.</string>
+    <string name="update_available_github_message">Доступна новая версия (%1$s). Перейдите на GitHub, чтобы загрузить последнюю версию.</string>
+    <string name="update_not_available_title">Установлена последняя версия</string>
+    <string name="update_not_available_message">Вы уже используете последнюю версию (%1$s).</string>
+    <string name="update_check_failed">Не удалось проверить обновления. Проверьте подключение к интернету.</string>
+    <string name="open_play_store">Открыть Play Store</string>
+    <string name="open_github_releases">Открыть GitHub Releases</string>
     <string name="about_title">О Open Headunit</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1003,8 +1016,6 @@
     <string name="preflight_open_location">Геолокация</string>
     <string name="preflight_later">Позже</string>
     <string name="preflight_invalid_bssid">Неверный адрес WiFi. Введите 6 пар шестнадцатеричных цифр (например, 02:1A:11:FF:3C:4D).</string>
-    <string name="native_aa_complete_hfp_slc">Завершать подключение Bluetooth</string>
-    <string name="native_aa_complete_hfp_slc_description">Некоторые телефоны не запускают беспроводной Android Auto, пока Bluetooth этого устройства не будет считаться подключённым, а не просто сопряжённым. По умолчанию включено; отключите, если звонки на этом устройстве перестанут работать.</string>
     <string name="announce_connection_configuration">Запросить более длинный тайм-аут соединения</string>
     <string name="announce_connection_configuration_description">Указывает Android Auto ждать 15 секунд вместо 3, прежде чем считать соединение разорванным, и использовать буферы сокета большего размера. Это рассчитано на радиомодуль, который на несколько секунд уходит с канала в середине сеанса и забирает с собой соединение. Не измерялось, учитывает ли телефон хоть что-то из этого.</string>
     <string name="native_aa_ignore_external_bt">Игнорировать проверку совместимости Bluetooth</string>

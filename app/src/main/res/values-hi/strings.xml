@@ -180,6 +180,8 @@
     <string name="remove_from_blacklist">ब्लैकलिस्ट से हटाएं</string>
     <string name="usb_device_action_title">USB डिवाइस क्रिया</string>
     <string name="exit">निकास</string>
+    <string name="apps">ऐप्स</string>
+    <string name="no_apps_found">कोई ऐप नहीं मिला</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">सेल्फ़ मोड</string>
     <string name="to_android_auto">Android Auto पर जाएँ</string>
@@ -650,6 +652,17 @@
     <string name="support_rules_oneissue_title">प्रति इश्यू एक समस्या</string>
     <string name="support_rules_oneissue_desc">प्रत्येक इश्यू को एक ही समस्या तक सीमित रखें ताकि इसे ट्रैक और ठीक किया जा सके।</string>
     <string name="version">संस्करण</string>
+    <string name="check_for_updates">अपडेट की जांच करें</string>
+    <string name="check_for_updates_description">जांचें कि क्या Open Headunit का कोई नया संस्करण उपलब्ध है</string>
+    <string name="checking_for_updates">अपडेट की जांच की जा रही है…</string>
+    <string name="update_available_title">अपडेट उपलब्ध है</string>
+    <string name="update_available_playstore_message">एक नया संस्करण (%1$s) उपलब्ध है। कृपया ऐप अपडेट करने के लिए Google Play Store पर जाएं।</string>
+    <string name="update_available_github_message">एक नया संस्करण (%1$s) उपलब्ध है। नवीनतम संस्करण डाउनलोड करने के लिए GitHub पर जाएं।</string>
+    <string name="update_not_available_title">ऐप अपडेट है</string>
+    <string name="update_not_available_message">आप पहले से ही नवीनतम संस्करण (%1$s) का उपयोग कर रहे हैं।</string>
+    <string name="update_check_failed">अपडेट की जांच करने में विफल। कृपया अपना इंटरनेट कनेक्शन जांचें।</string>
+    <string name="open_play_store">Play Store खोलें</string>
+    <string name="open_github_releases">GitHub Releases खोलें</string>
     <string name="about_title">Open Headunit के बारे में</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1080,8 +1093,6 @@
     <string name="preflight_open_location">स्थान</string>
     <string name="preflight_later">बाद में</string>
     <string name="preflight_invalid_bssid">यह एक वाई-फ़ाई पता नहीं है। हेक्स अंकों के छह जोड़े दर्ज करें, जैसे 02:1A:11:FF:3C:4D।</string>
-    <string name="native_aa_complete_hfp_slc">ब्लूटूथ कनेक्शन पूरा करें</string>
-    <string name="native_aa_complete_hfp_slc_description">कुछ फ़ोन तब तक वायरलेस Android Auto शुरू नहीं करेंगे जब तक कि इस यूनिट का ब्लूटूथ कनेक्टेड न माना जाए। डिफ़ॉल्ट रूप से चालू।</string>
     <string name="native_aa_wake_remeasure">ब्लूटूथ वेक को पुनः मापें</string>
     <string name="native_aa_wake_verdict_unmeasured">अभी तक नहीं मापा गया</string>
     <string name="native_aa_wake_verdict_safe">इस यूनिट पर सुरक्षित</string>

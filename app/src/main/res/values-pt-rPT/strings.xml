@@ -181,6 +181,8 @@
     <string name="remove_from_blacklist">Remover da lista negra</string>
     <string name="usb_device_action_title">Ação do dispositivo USB</string>
     <string name="exit">Sair</string>
+    <string name="apps">Aplicações</string>
+    <string name="no_apps_found">Nenhuma aplicação encontrada</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">Modo Próprio</string>
     <string name="to_android_auto">Para o Android Auto</string>
@@ -650,6 +652,17 @@
     <string name="support_rules_oneissue_title">Um problema por publicação</string>
     <string name="support_rules_oneissue_desc">Mantenha cada publicação focada num único problema para que possa ser acompanhado e corrigido.</string>
     <string name="version">Versão</string>
+    <string name="check_for_updates">Procurar atualizações</string>
+    <string name="check_for_updates_description">Verificar se existe uma versão mais recente do Open Headunit disponível</string>
+    <string name="checking_for_updates">A procurar atualizações…</string>
+    <string name="update_available_title">Atualização disponível</string>
+    <string name="update_available_playstore_message">Está disponível uma versão mais recente (%1$s). Visite a Google Play Store para atualizar a sua aplicação.</string>
+    <string name="update_available_github_message">Está disponível uma versão mais recente (%1$s). Visite o GitHub para descarregar a versão mais recente.</string>
+    <string name="update_not_available_title">Atualizado</string>
+    <string name="update_not_available_message">Já está a utilizar a versão mais recente (%1$s).</string>
+    <string name="update_check_failed">Falha ao procurar atualizações. Verifique a sua ligação à internet.</string>
+    <string name="open_play_store">Abrir Play Store</string>
+    <string name="open_github_releases">Abrir GitHub Releases</string>
     <string name="about_title">Acerca do Open Headunit</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1080,8 +1093,6 @@
     <string name="preflight_open_location">Localização</string>
     <string name="preflight_later">Mais tarde</string>
     <string name="preflight_invalid_bssid">Esse não é um endereço Wi-Fi válido. Introduza seis pares de dígitos hexadecimais, como 02:1A:11:FF:3C:4D.</string>
-    <string name="native_aa_complete_hfp_slc">Concluir a ligação Bluetooth</string>
-    <string name="native_aa_complete_hfp_slc_description">Alguns telemóveis só iniciam o Android Auto sem fios quando o Bluetooth desta unidade conta como ligado. Ativo por predefinição.</string>
     <string name="native_aa_wake_remeasure">Medir novamente o despertar por Bluetooth</string>
     <string name="native_aa_wake_verdict_unmeasured">Ainda não medido</string>
     <string name="native_aa_wake_verdict_safe">Seguro nesta unidade</string>

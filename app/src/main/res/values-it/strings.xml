@@ -9,6 +9,8 @@
     <string name="allowed">Consentito</string>
     <string name="ignored">Ignorato</string>
     <string name="exit">Esci</string>
+    <string name="apps">Applicazioni</string>
+    <string name="no_apps_found">Nessuna applicazione trovata</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">Modalità Self</string>
     <string name="to_android_auto">A Android Auto</string>
@@ -303,6 +305,17 @@
     <string name="about">Informazioni e Supporto</string>
     <string name="about_description">Ottieni maggiori informazioni su Open Headunit</string>
     <string name="version">Versione</string>
+    <string name="check_for_updates">Controlla aggiornamenti</string>
+    <string name="check_for_updates_description">Verifica se è disponibile una versione più recente di Open Headunit</string>
+    <string name="checking_for_updates">Controllo aggiornamenti…</string>
+    <string name="update_available_title">Aggiornamento disponibile</string>
+    <string name="update_available_playstore_message">È disponibile una nuova versione (%1$s). Visita Google Play Store per aggiornare l\'app.</string>
+    <string name="update_available_github_message">È disponibile una nuova versione (%1$s). Visita GitHub per scaricare l\'ultima versione.</string>
+    <string name="update_not_available_title">Aggiornato</string>
+    <string name="update_not_available_message">Stai già utilizzando la versione più recente (%1$s).</string>
+    <string name="update_check_failed">Impossibile verificare la presenza di aggiornamenti. Controlla la connessione internet.</string>
+    <string name="open_play_store">Apri Play Store</string>
+    <string name="open_github_releases">Apri GitHub Releases</string>
     <string name="about_title">Informazioni su Open Headunit</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1007,8 +1020,6 @@
     <string name="preflight_open_location">Posizione</string>
     <string name="preflight_later">Più tardi</string>
     <string name="preflight_invalid_bssid">Indirizzo WiFi non valido. Inserisci 6 coppie di cifre esadecimali (es. 02:1A:11:FF:3C:4D).</string>
-    <string name="native_aa_complete_hfp_slc">Completa la connessione Bluetooth</string>
-    <string name="native_aa_complete_hfp_slc_description">Alcuni telefoni non avviano Android Auto wireless finché il Bluetooth di questa unità non risulta connesso, non solo associato. Attivo per impostazione predefinita; disattivalo se le chiamate su questo dispositivo smettono di funzionare.</string>
     <string name="announce_connection_configuration">Richiedi un timeout di collegamento più lungo</string>
     <string name="announce_connection_configuration_description">Dice ad Android Auto di attendere 15 secondi anziché 3 prima di considerare il collegamento interrotto, e di usare buffer socket più grandi. È pensato per una radio che esce dal canale per qualche secondo a metà sessione e si porta via la connessione. Non è stato misurato se il telefono ne tiene conto.</string>
     <string name="native_aa_ignore_external_bt">Ignora il controllo di compatibilità Bluetooth</string>

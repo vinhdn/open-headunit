@@ -9,6 +9,8 @@
     <string name="allowed">Erlaubt</string>
     <string name="ignored">Ignoriert</string>
     <string name="exit">Beenden</string>
+    <string name="apps">Apps</string>
+    <string name="no_apps_found">Keine Anwendungen gefunden</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">Self Mode</string>
     <string name="to_android_auto">Zu Android Auto</string>
@@ -356,6 +358,17 @@
     <string name="about">Über &amp; Support</string>
     <string name="about_description">Mehr Informationen über Open Headunit</string>
     <string name="version">Version</string>
+    <string name="check_for_updates">Auf Updates prüfen</string>
+    <string name="check_for_updates_description">Prüft, ob eine neuere Version verfügbar ist</string>
+    <string name="checking_for_updates">Prüfe auf Updates…</string>
+    <string name="update_available_title">Update verfügbar</string>
+    <string name="update_available_playstore_message">Es gibt ein neues Update (%1$s). Bitte besuche den Google Play Store und aktualisiere deine App.</string>
+    <string name="update_available_github_message">Es gibt ein neues Update (%1$s). Gehe jetzt zu GitHub und lade dir die neueste Version herunter.</string>
+    <string name="update_not_available_title">Kein Update verfügbar</string>
+    <string name="update_not_available_message">Du verwendest bereits die neueste Version (%1$s).</string>
+    <string name="update_check_failed">Prüfung auf Updates fehlgeschlagen. Bitte Internetverbindung prüfen.</string>
+    <string name="open_play_store">Zum Play Store</string>
+    <string name="open_github_releases">Zu GitHub Releases</string>
     <string name="about_title">Über Open Headunit</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1010,8 +1023,6 @@
     <string name="preflight_open_location">Standort</string>
     <string name="preflight_later">Später</string>
     <string name="preflight_invalid_bssid">Ungültige WLAN-Adresse. Gib sechs hexadezimale Zahlenpaare ein, z. B. 02:1A:11:FF:3C:4D.</string>
-    <string name="native_aa_complete_hfp_slc">Bluetooth-Verbindung vollständig herstellen</string>
-    <string name="native_aa_complete_hfp_slc_description">Manche Telefone starten kabelloses Android Auto erst, wenn das Bluetooth dieses Geräts als verbunden gilt und nicht nur als gekoppelt. Standardmäßig an; schalte es aus, wenn Anrufe auf diesem Gerät nicht mehr funktionieren.</string>
     <string name="announce_connection_configuration">Um einen längeren Verbindungs-Timeout bitten</string>
     <string name="announce_connection_configuration_description">Weist Android Auto an, 15 Sekunden statt 3 zu warten, bevor die Verbindung als tot gilt, und größere Socket-Puffer zu verwenden. Das ist für ein Funkmodul gedacht, das mitten in der Sitzung für ein paar Sekunden den Kanal wechselt und die Verbindung dabei mitreißt. Ob dein Telefon das überhaupt beachtet, wurde nicht gemessen.</string>
     <string name="native_aa_ignore_external_bt">Bluetooth-Kompatibilitätsprüfung ignorieren</string>

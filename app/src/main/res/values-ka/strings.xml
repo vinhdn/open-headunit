@@ -9,6 +9,8 @@
     <string name="allowed">ნებადართული</string>
     <string name="ignored">იგნორირებული</string>
     <string name="exit">გასვლა</string>
+    <string name="apps">აპლიკაციები</string>
+    <string name="no_apps_found">აპლიკაციები ვერ მოიძებნა</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">ავტონომიური რეჟიმი</string>
     <string name="to_android_auto">Android Auto-ზე გადასვლა</string>
@@ -318,6 +320,17 @@
     <string name="about">შესახებ &amp; მხარდაჭერა</string>
     <string name="about_description">მიიღეთ მეტი ინფორმაცია Open Headunit-ის შესახებ</string>
     <string name="version">ვერსია</string>
+    <string name="check_for_updates">განახლებების შემოწმება</string>
+    <string name="check_for_updates_description">შემოწმება, ხელმისაწვდომია თუ არა Open Headunit-ის ახალი ვერსია</string>
+    <string name="checking_for_updates">მოწმდება განახლებები…</string>
+    <string name="update_available_title">განახლება ხელმისაწვდომია</string>
+    <string name="update_available_playstore_message">ხელმისაწვდომია უფრო ახალი ვერსია (%1$s). გთხოვთ, ეწვიოთ Google Play Store-ს აპლიკაციის განსაახლებლად.</string>
+    <string name="update_available_github_message">ხელმისაწვდომია უფრო ახალი ვერსია (%1$s). ეწვიეთ GitHub-ს უახლესი ვერსიის ჩამოსატვირთად.</string>
+    <string name="update_not_available_title">განახლებულია</string>
+    <string name="update_not_available_message">თქვენ უკვე იყენებთ უახლეს ვერსიას (%1$s).</string>
+    <string name="update_check_failed">განახლებების შემოწმება ვერ მოხერხდა. გთხოვთ, შეამოწმოთ ინტერნეტთან კავშირი.</string>
+    <string name="open_play_store">Play Store-ის გახსნა</string>
+    <string name="open_github_releases">GitHub Releases-ის გახსნა</string>
     <string name="about_title">Open Headunit-ის შესახებ</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -985,8 +998,6 @@
     <string name="preflight_open_location">მდებარეობა</string>
     <string name="preflight_later">მოგვიანებით</string>
     <string name="preflight_invalid_bssid">არასწორი WiFi მისამართი (მაგ: 02:1A:11:FF:3C:4D).</string>
-    <string name="native_aa_complete_hfp_slc">Bluetooth-კავშირის დასრულება</string>
-    <string name="native_aa_complete_hfp_slc_description">ზოგიერთი ტელეფონი უსადენო Android Auto-ს არ იწყებს, სანამ ამ მოწყობილობის Bluetooth დაკავშირებულად არ ჩაითვლება და არა მხოლოდ დაწყვილებულად. ნაგულისხმევად ჩართულია; გამორთეთ, თუ ამ მოწყობილობაზე ზარები აღარ მუშაობს.</string>
     <string name="announce_connection_configuration">უფრო გრძელი კავშირის ტაიმაუთის მოთხოვნა</string>
     <string name="announce_connection_configuration_description">სთხოვს Android Auto-ს, დაელოდოს 15 წამი 3-ის ნაცვლად, სანამ კავშირს მკვდრად ჩათვლის, და გამოიყენოს უფრო დიდი სოკეტის ბუფერები. ეს მიმართულია რადიოსკენ, რომელიც სესიის შუაში რამდენიმე წამით ტოვებს არხს და კავშირს თან ითრევს. არ არის გაზომილი, ითვალისწინებს თუ არა ამას თქვენი ტელეფონი.</string>
     <string name="native_aa_ignore_external_bt">Bluetooth-თავსებადობის შემოწმების იგნორირება</string>

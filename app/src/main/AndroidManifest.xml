@@ -7,9 +7,14 @@
         rikka.shizuku.api, rikka.shizuku.shared, rikka.shizuku.aidl, com.topjohnwu.superuser" />
 
     <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
         <package android:name="com.google.android.projection.gearhead" />
         <!-- OEM AA/CarPlay apps that conflict with Open Headunit -->
         <package android:name="com.zjinnova.zlink" />
+        <package android:name="com.syu.carlink" />
         <package android:name="com.zjinnova.zlink5" />
         <package android:name="cn.manstep.phonemirrorBox" />
         <package android:name="cn.manstep.phonemirrorBox.nomap" />

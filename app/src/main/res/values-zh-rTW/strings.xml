@@ -8,6 +8,8 @@
     <string name="allowed">已允許</string>
     <string name="ignored">已忽略</string>
     <string name="exit">離開</string>
+    <string name="apps">應用程式</string>
+    <string name="no_apps_found">找不到應用程式</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">自我模式</string>
     <string name="to_android_auto">到 Android Auto</string>
@@ -277,6 +279,17 @@
     <string name="about">關於 &amp; 支援</string>
     <string name="about_description">取得更多資訊關於 Open Headunit</string>
     <string name="version">版本</string>
+    <string name="check_for_updates">檢查更新</string>
+    <string name="check_for_updates_description">檢查是否有更新的 Open Headunit 版本</string>
+    <string name="checking_for_updates">正在檢查更新…</string>
+    <string name="update_available_title">發現新版本</string>
+    <string name="update_available_playstore_message">有新版本 (%1$s) 可用。請前往 Google Play 商店更新您的應用程式。</string>
+    <string name="update_available_github_message">有新版本 (%1$s) 可用。請前往 GitHub 下載最新版本。</string>
+    <string name="update_not_available_title">已是最新版本</string>
+    <string name="update_not_available_message">您已在使用最新版本 (%1$s)。</string>
+    <string name="update_check_failed">檢查更新失敗，請檢查網路連線。</string>
+    <string name="open_play_store">開啟 Play 商店</string>
+    <string name="open_github_releases">開啟 GitHub Releases</string>
     <string name="about_title">關於 Open Headunit</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1003,8 +1016,6 @@
     <string name="preflight_open_location">定位服務</string>
     <string name="preflight_later">稍後</string>
     <string name="preflight_invalid_bssid">無效的 WiFi 位址。請輸入 6 組十六進位數字（例如 02:1A:11:FF:3C:4D）。</string>
-    <string name="native_aa_complete_hfp_slc">完成藍牙連線</string>
-    <string name="native_aa_complete_hfp_slc_description">部分手機必須等到此裝置的藍牙被視為已連線（而非僅已配對）才會啟動無線 Android Auto。預設開啟；若此裝置上的通話停止運作，請關閉。</string>
     <string name="announce_connection_configuration">要求更長的連線逾時</string>
     <string name="announce_connection_configuration_description">告訴 Android Auto 在判定連線中斷前等待 15 秒，而不是 3 秒，並使用較大的通訊端緩衝區。這是針對在工作階段中途離開頻道幾秒鐘、並將連線一併中斷的無線電。尚未測得你的手機是否會遵循其中任何一項。</string>
     <string name="native_aa_ignore_external_bt">忽略藍牙相容性檢查</string>

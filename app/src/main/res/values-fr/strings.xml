@@ -180,6 +180,8 @@
     <string name="allowed">Autorisé</string>
     <string name="ignored">Ignoré</string>
     <string name="exit">Quitter</string>
+    <string name="apps">Applications</string>
+    <string name="no_apps_found">Aucune application trouvée</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">Self Mode</string>
     <string name="to_android_auto">Vers Android Auto</string>
@@ -544,6 +546,17 @@
     <string name="support_rules_oneissue_title">Un problème par issue</string>
     <string name="support_rules_oneissue_desc">Limite chaque issue à un seul problème pour qu\'il puisse être suivi et corrigé. Ouvre des issues séparées pour des problèmes non liés.</string>
     <string name="version">Version</string>
+    <string name="check_for_updates">Rechercher des mises à jour</string>
+    <string name="check_for_updates_description">Vérifier si une version plus récente d\'Open Headunit est disponible</string>
+    <string name="checking_for_updates">Recherche de mises à jour…</string>
+    <string name="update_available_title">Mise à jour disponible</string>
+    <string name="update_available_playstore_message">Une version plus récente (%1$s) est disponible. Veuillez visiter le Google Play Store pour mettre à jour votre application.</string>
+    <string name="update_available_github_message">Une version plus récente (%1$s) est disponible. Visitez GitHub pour télécharger la dernière version.</string>
+    <string name="update_not_available_title">À jour</string>
+    <string name="update_not_available_message">Vous utilisez déjà la dernière version (%1$s).</string>
+    <string name="update_check_failed">Impossible de vérifier les mises à jour. Veuillez vérifier votre connexion Internet.</string>
+    <string name="open_play_store">Ouvrir le Play Store</string>
+    <string name="open_github_releases">Ouvrir GitHub Releases</string>
     <string name="about_title">À propos d\'Open Headunit</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1051,8 +1064,6 @@
     <string name="preflight_open_location">Localisation</string>
     <string name="preflight_later">Plus tard</string>
     <string name="preflight_invalid_bssid">Adresse Wi-Fi non valide. Entrez 6 paires de caractères hexadécimaux (ex. 02:1A:11:FF:3C:4D).</string>
-    <string name="native_aa_complete_hfp_slc">Terminer la connexion Bluetooth</string>
-    <string name="native_aa_complete_hfp_slc_description">Certains téléphones ne démarrent Android Auto sans fil que lorsque le Bluetooth de cet appareil est considéré comme connecté, et pas seulement appairé. Activé par défaut ; désactivez-le si les appels sur cet appareil cessent de fonctionner.</string>
     <string name="announce_connection_configuration">Demander un délai de liaison plus long</string>
     <string name="announce_connection_configuration_description">Indique à Android Auto d\'attendre 15 secondes au lieu de 3 avant de considérer la liaison comme morte, et d\'utiliser des tampons de socket plus grands. Cela vise une radio qui quitte son canal pendant quelques secondes en cours de session et qui emporte la connexion avec elle. On n\'a pas mesuré si votre téléphone en tient compte.</string>
     <string name="native_aa_ignore_external_bt">Ignorer la vérification de compatibilité Bluetooth</string>

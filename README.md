@@ -47,6 +47,24 @@ Choose from one of four connection strategies depending on your Android Auto ver
 - Supports **Wi-Fi Direct (P2P)** or the **Headunit Hotspot** transport.
 - Configure under Open Headunit Settings -> **Android Auto Mode** -> **Native Mode**.
 
+#### FYT external Bluetooth module transport (experimental)
+On FYT units where the phone pairs for calls with a separate Bluetooth module (for example **DUDUAUTO** on DUDUOS), Native Mode can carry its Android Auto Bluetooth handshake through `/dev/auto_serial`, the relay the stock Car Link app (`com.syu.carlink`) uses, while calls remain on the module and the vehicle microphone/speakers. Tested so far only on DUDUOS with a BLINK module.
+
+Requirements:
+- An FYT unit that exposes `/dev/auto_serial` (Car Link's external-module backend, `sys.fyt.bluetooth_type` above zero).
+- Nothing extra where the node is app-openable, as it is for the stock Car Link. Where it is not (node mode or SELinux), root access for Open Headunit, used as a fallback.
+- The stock `com.syu.carlink` package disabled, because two readers on the same terminal split protocol messages.
+- The phone paired with the module; pairing and phone priority remain managed by the module.
+
+Setup:
+1. Disable the stock client: `adb shell pm disable-user --user 0 com.syu.carlink` (prefix with `su -c` if the shell refuses).
+2. In Open Headunit, select **Native Mode** and enable **Connect through the FYT external Bluetooth module**.
+3. Keep the phone paired with the module and connect normally.
+
+On a detected FYT module unit with this transport off, Native Mode refuses to start and names this setting, instead of listening on a radio the phone is not paired with. If the channel cannot be opened (Car Link still enabled or running, or the node not app-openable and root denied), the reason is shown on screen and retried with a growing delay.
+
+Android Bluetooth driver selection, preferred-phone and wake-list controls are intentionally hidden on this route because Android cannot see or dial phones bonded to the external module. To roll back, turn this transport off and re-enable the stock client with `adb shell pm enable com.syu.carlink` (prefix with `su -c` if needed).
+
 #### 3. Headunit Server (Essential for Self-Mode on AA 17.4+)
 - Starts the native Android Auto developer server directly on your phone or on the same device (Self-Mode).
 - **Setup:**
@@ -84,14 +102,18 @@ adb shell am start -a android.intent.action.VIEW -d "headunit://connect?ip=192.1
 - Info/Help descriptions to the settings for better understanding
 
 ## Changelog
-### v.3.5.0-beta1
+### v.3.5.0-beta2
 - Native AA: reconnect to a network that is still there, instead of rebuilding it every time
+- Native AA: wake the phone over the Bluetooth module on a cold start, and from the WiFi button
+- Native AA over hotspot: stop advertising an endpoint that moves, bring the hotspot back after a boot or ACC wake- #1014
+- Native AA: recover when the platform deletes the group mid-join, bring the hotspot back after sleep, log the Bluetooth link, and stop a QR crash below Android 4.4
 - Added: Option to use Open Headunit as a launcher
 - External Bluetooth module: make the WiFi button work, find the module after a boot, and keep a Bluetooth auto-start from being lost behind the settings screen
 - Added: Simplified Chinese 🇨🇳, Indonesian 🇮🇩, Hindi 🇮🇳, Thai 🇹🇭, European Portuguese 🇵🇹
-- Native AA over hotspot: stop advertising an endpoint that moves, bring the hotspot back after a boot or ACC wake- #1014
 - Connection: one attempt at a time, hold auto-connect behind settings and the pill's X, and fix the dongle's TLS handshake- #1015
-- Native AA: recover when the platform deletes the group mid-join, bring the hotspot back after sleep, log the Bluetooth link, and stop a QR crash below Android 4.4
+- Request low-latency Wi-Fi during wireless projection, thanks to @emotionbug
+- Add on-demand "Check for Updates" button
+- Add FYT BLINK/DUDUAUTO module transport for Native AA thanks to @dohun0310
 
 ### v.3.4.0
 - USB: connect non-Pixel phones without fighting a fast-reverting dongle

@@ -180,6 +180,8 @@
     <string name="remove_from_blacklist">ลบออกจากบัญชีดำ</string>
     <string name="usb_device_action_title">การกระทำของอุปกรณ์ USB</string>
     <string name="exit">ออก</string>
+    <string name="apps">แอปพลิเคชัน</string>
+    <string name="no_apps_found">ไม่พบแอปพลิเคชัน</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">โหมดตนเอง (Self Mode)</string>
     <string name="to_android_auto">ไปที่ Android Auto</string>
@@ -650,6 +652,17 @@
     <string name="support_rules_oneissue_title">หนึ่งปัญหาต่อหนึ่งโพสต์</string>
     <string name="support_rules_oneissue_desc">จำกัดแต่ละโพสต์ไว้ที่ปัญหาเดียวเพื่อให้สามารถติดตามและแก้ไขได้</string>
     <string name="version">เวอร์ชัน</string>
+    <string name="check_for_updates">ตรวจหาการอัปเดต</string>
+    <string name="check_for_updates_description">ตรวจสอบว่ามี Open Headunit เวอร์ชันใหม่กว่าหรือไม่</string>
+    <string name="checking_for_updates">กำลังตรวจหาการอัปเดต…</string>
+    <string name="update_available_title">มีการอัปเดต</string>
+    <string name="update_available_playstore_message">มีเวอร์ชันใหม่กว่า (%1$s) พร้อมใช้งาน โปรดไปที่ Google Play Store เพื่ออัปเดตแอปของคุณ</string>
+    <string name="update_available_github_message">มีเวอร์ชันใหม่กว่า (%1$s) พร้อมใช้งาน ไปที่ GitHub เพื่อดาวน์โหลดเวอร์ชันล่าสุด</string>
+    <string name="update_not_available_title">เป็นเวอร์ชันล่าสุดแล้ว</string>
+    <string name="update_not_available_message">คุณกำลังใช้เวอร์ชันล่าสุด (%1$s) อยู่แล้ว</string>
+    <string name="update_check_failed">ไม่สามารถตรวจหาการอัปเดตได้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ</string>
+    <string name="open_play_store">เปิด Play Store</string>
+    <string name="open_github_releases">เปิด GitHub Releases</string>
     <string name="about_title">เกี่ยวกับ Open Headunit</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1080,8 +1093,6 @@
     <string name="preflight_open_location">ตำแหน่งที่ตั้ง</string>
     <string name="preflight_later">ภายหลัง</string>
     <string name="preflight_invalid_bssid">นั่นไม่ใช่ที่อยู่ Wi-Fi ป้อนตัวเลขฐานสิบหก 6 คู่ เช่น 02:1A:11:FF:3C:4D</string>
-    <string name="native_aa_complete_hfp_slc">ทำการเชื่อมต่อบลูทูธให้สมบูรณ์</string>
-    <string name="native_aa_complete_hfp_slc_description">โทรศัพท์บางรุ่นจะไม่เริ่ม Android Auto ไร้สายจนกว่าบลูทูธจะนับว่าเชื่อมต่อแล้ว เปิดใช้งานเป็นค่าเริ่มต้น</string>
     <string name="native_aa_wake_remeasure">วัดค่าการปลุกบลูทูธใหม่</string>
     <string name="native_aa_wake_verdict_unmeasured">ยังไม่ได้วัดค่า</string>
     <string name="native_aa_wake_verdict_safe">ปลอดภัยสำหรับยูนิตนี้</string>

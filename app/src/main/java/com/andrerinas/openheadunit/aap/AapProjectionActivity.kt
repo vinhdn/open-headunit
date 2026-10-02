@@ -72,6 +72,9 @@ import com.andrerinas.openheadunit.main.Aa174Notice
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.andrerinas.openheadunit.main.AutoStartOfferPolicy
 import com.andrerinas.openheadunit.main.MainActivity
+import com.andrerinas.openheadunit.connection.wifi.modes.nativeaa.ExternalBtTransportPolicy
+import com.andrerinas.openheadunit.connection.wifi.modes.nativeaa.NativeAaHandshakeManager
+import com.andrerinas.openheadunit.main.AppDrawerFragment
 import java.io.File
 import kotlin.math.abs
 
@@ -780,6 +783,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         if (settings.wifiConnectionMode !=
             com.andrerinas.openheadunit.connection.wifi.WifiLauncherMode.NATIVE
         ) return
+        if (ExternalBtTransportPolicy.usesExternalModule(NativeAaHandshakeManager.transportRoute(this))) return
         val adapter = BluetoothHelper.getBluetoothAdapter(this)
         if (adapter == null || !adapter.isEnabled) return
 
@@ -1581,8 +1585,14 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         options.add(ExitOption(R.string.exit_dialog_background, R.drawable.ic_home, Color.LTGRAY))
         options.add(ExitOption(R.string.exit_dialog_settings, R.drawable.ic_settings_quick, Color.LTGRAY))
 
+        if (settings.isCarLauncherActive) {
+            options.add(ExitOption(R.string.apps, R.drawable.ic_apps, Color.LTGRAY))
+        }
+
         if (settings.wifiConnectionMode == com.andrerinas.openheadunit.connection.wifi.WifiLauncherMode.NATIVE) {
-            options.add(ExitOption(R.string.switch_driver, R.drawable.ic_phone, Color.LTGRAY))
+            if (!ExternalBtTransportPolicy.usesExternalModule(NativeAaHandshakeManager.transportRoute(this))) {
+                options.add(ExitOption(R.string.switch_driver, R.drawable.ic_phone, Color.LTGRAY))
+            }
             // WiFi Direct only: the group is ours, created for the session. An access point is
             // usually the user's own, and UserExitHotspotPolicy already leaves it alone.
             if (settings.nativeApStrategy == com.andrerinas.openheadunit.connection.wifi.modes.nativeaa.NativeStrategy.WIFI_DIRECT) {
@@ -1629,6 +1639,9 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
                     R.string.exit_dialog_settings -> {
                         showQuickSettings()
                     }
+                    R.string.apps -> {
+                        showAppDrawer()
+                    }
                     R.string.switch_driver -> {
                         switchDriver()
                     }
@@ -1647,6 +1660,11 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         // We will implement QuickSettingsFragment as a DialogFragment for easy overlay
         val quickSettings = com.andrerinas.openheadunit.main.QuickSettingsFragment()
         quickSettings.show(supportFragmentManager, "quick_settings")
+    }
+
+    private fun showAppDrawer() {
+        val appDrawer = AppDrawerFragment()
+        appDrawer.show(supportFragmentManager, "app_drawer")
     }
 
     /**

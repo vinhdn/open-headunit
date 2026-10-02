@@ -9,6 +9,8 @@
     <string name="allowed">مسموح</string>
     <string name="ignored">تجاهل</string>
     <string name="exit">خروج</string>
+    <string name="apps">التطبيقات</string>
+    <string name="no_apps_found">لم يتم العثور على تطبيقات</string>
     <string name="video">Android Auto</string>
     <string name="self_mode">الوضع الذاتي</string>
     <string name="to_android_auto">إلى Android Auto</string>
@@ -278,6 +280,17 @@
     <string name="about">حول &amp; الدعم</string>
     <string name="about_description">الحصول على مزيد من المعلومات حول Open Headunit</string>
     <string name="version">الإصدار</string>
+    <string name="check_for_updates">التحقق من وجود تحديثات</string>
+    <string name="check_for_updates_description">التحقق مما إذا كان هناك إصدار أحدث من Open Headunit متاحاً</string>
+    <string name="checking_for_updates">جارٍ التحقق من وجود تحديثات…</string>
+    <string name="update_available_title">تحديث متاح</string>
+    <string name="update_available_playstore_message">يتوفر إصدار أحدث (%1$s). يرجى زيارة متجر Google Play لتحديث تطبيقك.</string>
+    <string name="update_available_github_message">يتوفر إصدار أحدث (%1$s). تفضل بزيارة GitHub لتنزيل أحدث إصدار.</string>
+    <string name="update_not_available_title">محدث لأحدث إصدار</string>
+    <string name="update_not_available_message">أنت تستخدم بالفعل أحدث إصدار (%1$s).</string>
+    <string name="update_check_failed">فشل التحقق من وجود تحديثات. يرجى التحقق من اتصال الإنترنت.</string>
+    <string name="open_play_store">فتح متجر Play</string>
+    <string name="open_github_releases">فتح إصدارات GitHub</string>
     <string name="about_title">حول Open Headunit</string>
     <string name="copyright">© 2025-%d André Rinas</string>
 
@@ -1002,8 +1015,6 @@
     <string name="preflight_open_location">الموقع</string>
     <string name="preflight_later">لاحقاً</string>
     <string name="preflight_invalid_bssid">عنوان WiFi غير صالح. أدخل 6 أزواج سداسية عشرية مثل 02:1A:11:FF:3C:4D.</string>
-    <string name="native_aa_complete_hfp_slc">إكمال اتصال البلوتوث</string>
-    <string name="native_aa_complete_hfp_slc_description">بعض الهواتف لا تبدأ Android Auto اللاسلكي حتى يُعتبر بلوتوث هذه الوحدة متصلاً، وليس مقترناً فقط. مفعّل افتراضياً؛ عطّله إذا توقفت المكالمات على هذا الجهاز عن العمل.</string>
     <string name="announce_connection_configuration">طلب مهلة اتصال أطول</string>
     <string name="announce_connection_configuration_description">يطلب هذا الخيار من Android Auto الانتظار 15 ثانية بدلاً من 3 قبل اعتبار الاتصال منقطعاً، واستخدام مخازن مؤقتة أكبر للمقبس. وهو موجه لراديو يخرج عن قناته لبضع ثوانٍ في منتصف الجلسة ويأخذ الاتصال معه. لم يُقَس ما إذا كان هاتفك يلتزم بأي من ذلك.</string>
     <string name="native_aa_ignore_external_bt">تجاهل فحص توافق البلوتوث</string>
