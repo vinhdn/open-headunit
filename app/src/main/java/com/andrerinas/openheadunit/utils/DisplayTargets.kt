@@ -36,6 +36,27 @@ object DisplayTargets {
     fun candidates(context: Context): List<DisplayTargetPolicy.DisplayInfo> =
         DisplayTargetPolicy.candidates(list(context))
 
+    /**
+     * The display a launcher has embedded the app on (a PiP slot), or null. Held in memory only: it
+     * describes a view in another app that is gone after a restart, and [choose] ignores it once
+     * that display is.
+     */
+    @Volatile
+    var embeddedDisplayId: Int? = null
+        private set
+
+    /** Records where the launcher embeds the app, or that it no longer does when [displayId] is null. */
+    fun noteEmbedded(displayId: Int?) {
+        if (embeddedDisplayId == displayId) return
+        embeddedDisplayId = displayId
+        AppLog.i(if (displayId == null) "DisplayTargets: no longer embedded by the launcher"
+            else "DisplayTargets: the launcher embeds the app on display $displayId")
+    }
+
+    /** Whether [displayId] is a presentation display, as far as Android reports it. */
+    fun isPresentation(context: Context, displayId: Int): Boolean =
+        list(context).firstOrNull { it.displayId == displayId }?.isPresentation ?: false
+
     /** Which display this session should use, falling back to the built-in panel on any doubt. */
     fun choose(context: Context, settings: Settings): DisplayTargetPolicy.Choice {
         val displays = list(context)
@@ -43,6 +64,7 @@ object DisplayTargets {
             mode = DisplayTargetPolicy.Mode.of(settings.preferredDisplayMode),
             preferredDisplayId = settings.preferredDisplayId,
             displays = displays,
+            embeddedDisplayId = embeddedDisplayId,
         )
         logChoice(choice, displays)
         return choice

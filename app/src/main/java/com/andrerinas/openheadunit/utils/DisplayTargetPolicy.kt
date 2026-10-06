@@ -11,6 +11,25 @@ object DisplayTargetPolicy {
     /** `Display.DEFAULT_DISPLAY`, repeated so this object needs no Android import. */
     const val DEFAULT_DISPLAY_ID = 0
 
+    /** The extra a BAIC/Qinggan launcher puts on the intent that embeds this app: PIP, TAPLO or MAIN. */
+    const val EXTRA_EMBED_SURFACE = "com.qinggan.androidauto.extra.BAIC_SURFACE"
+
+    /**
+     * Whether an activity is running inside another app's view (an ActivityView or TaskView, the way
+     * a launcher fills its PiP slots) rather than on a display of its own.
+     *
+     * The launcher says so with [EXTRA_EMBED_SURFACE]; without it, a non-default display that is not
+     * a presentation display is one: HDMI and other real panels carry the presentation flag, the
+     * virtual display behind an embedding view does not.
+     */
+    fun isEmbeddedHost(surfaceHint: String?, displayId: Int, isPresentation: Boolean): Boolean {
+        when (surfaceHint?.trim()?.uppercase()) {
+            "PIP", "TAPLO" -> return displayId != DEFAULT_DISPLAY_ID
+            "MAIN" -> return false
+        }
+        return displayId != DEFAULT_DISPLAY_ID && !isPresentation
+    }
+
     /** Stored as the second screen's display when it should take whichever presentation display is first. */
     const val AUX_DISPLAY_AUTO = -1
 
@@ -57,8 +76,23 @@ object DisplayTargetPolicy {
             .filter { it.isUsable && it.displayId != DEFAULT_DISPLAY_ID }
             .sortedWith(compareByDescending<DisplayInfo> { it.isPresentation }.thenBy { it.displayId })
 
-    /** Which display to project on, never throwing and never leaving the caller without an answer. */
-    fun choose(mode: Mode, preferredDisplayId: Int, displays: List<DisplayInfo>): Choice {
+    /**
+     * Which display to project on, never throwing and never leaving the caller without an answer.
+     *
+     * A display the launcher embeds this app on comes first, whatever the setting says: the person
+     * put the app in that slot, and a projection opening anywhere else would leave it empty.
+     */
+    fun choose(
+        mode: Mode,
+        preferredDisplayId: Int,
+        displays: List<DisplayInfo>,
+        embeddedDisplayId: Int? = null,
+    ): Choice {
+        if (embeddedDisplayId != null) {
+            displays.firstOrNull { it.displayId == embeddedDisplayId && it.isUsable }?.let {
+                return Choice(it.displayId, "the launcher embeds the app on ${it.name}")
+            }
+        }
         if (mode == Mode.DEFAULT) return Choice(DEFAULT_DISPLAY_ID, "the built-in display was chosen")
         val candidates = candidates(displays)
         if (candidates.isEmpty()) {

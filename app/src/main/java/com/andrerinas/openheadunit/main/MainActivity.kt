@@ -48,6 +48,7 @@ import com.andrerinas.openheadunit.utils.AppPermissions
 import com.andrerinas.openheadunit.utils.CarLauncherManager
 import com.andrerinas.openheadunit.utils.ConnectionIssue
 import com.andrerinas.openheadunit.utils.ConnectionIssues
+import com.andrerinas.openheadunit.utils.DisplayTargetPolicy
 import com.andrerinas.openheadunit.utils.DisplayTargets
 import android.content.res.Configuration
 import com.andrerinas.openheadunit.utils.Settings
@@ -151,6 +152,7 @@ class MainActivity : BaseActivity() {
 
         logLaunchSource()
         clearBootLoopGuardIfOpenedByHand()
+        noteEmbedding(intent)
 
         // If an Android Auto session is active, bring the projection activity to front
         if (App.provide(this).commManager.isConnected && !App.isPiPActive) {
@@ -998,6 +1000,7 @@ class MainActivity : BaseActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        noteEmbedding(intent)
         handleLaunchIntent(intent)
     }
 
@@ -1186,8 +1189,12 @@ class MainActivity : BaseActivity() {
         ContextCompat.registerReceiver(this, orientationReceiver, android.content.IntentFilter(AapService.ACTION_ORIENTATION_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED)
         isOrientationReceiverRegistered = true
 
-        // If an Android Auto session is active, bring the projection activity to front
-        if (App.provide(this).commManager.isConnected && !App.isPiPActive && !AapProjectionActivity.isForeground) {
+        noteEmbedding(intent)
+        // If an Android Auto session is active, bring the projection activity to front. Inside a
+        // launcher's PiP slot always, since a projection in front elsewhere still leaves it empty.
+        val embedded = DisplayTargets.embeddedDisplayId != null
+        if (App.provide(this).commManager.isConnected && !App.isPiPActive &&
+            (embedded || !AapProjectionActivity.isForeground)) {
             AppLog.i("MainActivity: Active session detected, bringing projection to front")
             bringProjectionToFront()
         }
@@ -1354,6 +1361,21 @@ class MainActivity : BaseActivity() {
             Intent(this, SettingsActivity::class.java)
                 .putExtra(SettingsActivity.EXTRA_SEARCH_QUERY, query)
         )
+    }
+
+    /**
+     * Notices a launcher embedding this activity in one of its slots (BAIC/Qinggan PiP), so the
+     * projection opens in that slot rather than full screen, and forgets it once the app is back on
+     * the built-in display. See [DisplayTargetPolicy.isEmbeddedHost].
+     */
+    private fun noteEmbedding(intent: Intent?) {
+        val displayId = DisplayTargets.displayIdOf(this)
+        val hint = intent?.getStringExtra(DisplayTargetPolicy.EXTRA_EMBED_SURFACE)
+        when {
+            DisplayTargetPolicy.isEmbeddedHost(hint, displayId, DisplayTargets.isPresentation(this, displayId)) ->
+                DisplayTargets.noteEmbedded(displayId)
+            displayId == DisplayTargetPolicy.DEFAULT_DISPLAY_ID -> DisplayTargets.noteEmbedded(null)
+        }
     }
 
     /**
