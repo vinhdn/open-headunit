@@ -52,6 +52,7 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
                     // H.264 baseline, which is the only codec the protocol allows a video sink.
                     sink.availableType = Media.MediaCodecType.MEDIA_CODEC_VIDEO_H264_BP
                     sink.audioType = Media.AudioStreamType.NONE
+                    sink.availableWhileInCall = true
                     sink.displayId = 1
                     sink.displayType = AuxDisplayProfilePolicy.displayType(role)
                     keycode?.let { sink.initialContentKeycode = it }
@@ -59,6 +60,7 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
                         codecResolution = profile.resolution
                         frameRate = profile.frameRate
                         setDensity(profile.density)
+                        setPixelAspectRatioE4(10000)
                         setMarginWidth(profile.widthMargin)
                         setMarginHeight(profile.heightMargin)
                         setVideoCodecType(Media.MediaCodecType.MEDIA_CODEC_VIDEO_H264_BP)
@@ -213,10 +215,24 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
                     }
 
                     it.addAllKeycodesSupported(KeyCode.supported)
+                    // Only alongside a second display, like the sink's own display id above.
+                    if (auxVideo != null) it.displayId = 0
                 }.build()
             }.build()
 
             services.add(input)
+
+            // Every display the phone is offered needs an input service of its own carrying that
+            // display's id: without one the phone hangs up straight after this message. It has
+            // nothing to send on it, so it declares no touchscreen and no keys.
+            if (auxVideo != null) {
+                services.add(Control.Service.newBuilder().also { service ->
+                    service.id = Channel.ID_INP2
+                    service.inputSourceService = Control.Service.InputSourceService.newBuilder()
+                        .setDisplayId(1)
+                        .build()
+                }.build())
+            }
 
             val audioType = if (announcesAac(context, settings, audioConfig.aac)) Media.MediaCodecType.MEDIA_CODEC_AUDIO_AAC_LC else Media.MediaCodecType.MEDIA_CODEC_AUDIO_PCM
 

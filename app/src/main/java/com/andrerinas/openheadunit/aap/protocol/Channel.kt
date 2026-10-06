@@ -26,12 +26,19 @@ object Channel {
      */
     const val ID_VID2 = 14
 
+    /**
+     * The auxiliary display's input. The phone expects every display it is offered to have an
+     * input service carrying that display's id, and ends the session without one.
+     */
+    const val ID_INP2 = 15
+
     fun name(channel: Int): String {
         when (channel) {
             ID_CTR -> return "CONTROL"
             ID_VID -> return "VIDEO"
             ID_VID2 -> return "VIDEO_AUX"
             ID_INP -> return "INPUT"
+            ID_INP2 -> return "INPUT_AUX"
             ID_SEN -> return "SENSOR"
             ID_MIC -> return "MIC"
             ID_AUD -> return "AUDIO"
