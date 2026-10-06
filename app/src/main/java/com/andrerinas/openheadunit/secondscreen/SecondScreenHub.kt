@@ -69,6 +69,7 @@ object SecondScreenHub {
         Output.NETWORK -> SecondScreenOutputPolicy.Availability(network = SecondScreenOutputPolicy.networkTarget(settings.auxNetworkSize))
         Output.MS912X -> SecondScreenOutputPolicy.Availability(ms912x = ms912xTarget(context, settings))
         Output.USB_DISPLAY -> SecondScreenOutputPolicy.Availability(usbDisplay = usbDisplayTarget(context, settings))
+        Output.TAPLO_APP -> SecondScreenOutputPolicy.Availability(taploApp = settings.taploAppLastTarget)
     }
 
     private fun androidDisplayTarget(context: Context, settings: Settings): Target? {
@@ -120,7 +121,8 @@ object SecondScreenHub {
             Output.USB_DISPLAY -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 UsbDisplayOutput(context)
             } else return null
-            Output.ANDROID_DISPLAY -> return null
+            // Both decode into a surface handed in from elsewhere: a window here, or the taplo app.
+            Output.ANDROID_DISPLAY, Output.TAPLO_APP -> return null
         }
         created.onKeyframeNeeded = onKeyframeNeeded
         try {

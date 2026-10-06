@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Android Auto Navi</string>
+    <string name="state_not_connected_title">Android Auto is not connected</string>
+    <string name="state_not_connected_text">Connect your phone to the car to show navigation on the instrument cluster.</string>
+    <string name="state_not_selected_title">The second screen is off</string>
+    <string name="state_not_selected_text">In Android Auto, open Settings, Second screen, and choose the taplo app.</string>
+    <string name="state_no_head_unit_title">Android Auto is not installed</string>
+    <string name="state_no_head_unit_text">This app shows the second screen of the Android Auto app, which has to be installed and signed with the same key.</string>
+    <string name="state_waiting_title">Waiting for navigation</string>
+    <string name="state_waiting_text">The picture appears as soon as the phone sends it.</string>
+</resources>
