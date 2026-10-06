@@ -4865,6 +4865,7 @@ class SettingsFragment : Fragment() {
         SecondScreenOutputPolicy.Output.NETWORK,
         SecondScreenOutputPolicy.Output.MS912X,
         SecondScreenOutputPolicy.Output.USB_DISPLAY,
+        SecondScreenOutputPolicy.Output.TAPLO_APP,
     )
 
     private fun auxOutputLabel(output: SecondScreenOutputPolicy.Output): String = getString(when (output) {
@@ -4872,6 +4873,7 @@ class SettingsFragment : Fragment() {
         SecondScreenOutputPolicy.Output.NETWORK -> R.string.aux_output_network
         SecondScreenOutputPolicy.Output.MS912X -> R.string.aux_output_ms912x
         SecondScreenOutputPolicy.Output.USB_DISPLAY -> R.string.aux_output_usb_display
+        SecondScreenOutputPolicy.Output.TAPLO_APP -> R.string.aux_output_taplo_app
     })
 
     private fun addAuxDisplayRows(items: MutableList<SettingItem>) {
@@ -4904,6 +4906,8 @@ class SettingsFragment : Fragment() {
             SecondScreenOutputPolicy.Output.NETWORK -> addAuxNetworkRows(items)
             SecondScreenOutputPolicy.Output.MS912X -> addAuxMs912xRows(items)
             SecondScreenOutputPolicy.Output.USB_DISPLAY -> addAuxUsbDisplayRows(items)
+            SecondScreenOutputPolicy.Output.TAPLO_APP -> items.add(SettingItem.InfoBanner(
+                stableId = "auxTaploAppHint", textResId = R.string.aux_output_taplo_app_hint))
             else -> {}
         }
 

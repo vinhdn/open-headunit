@@ -52,6 +52,12 @@
         android:name="com.andrerinas.openheadunit.permission.NAVIGATION_UPDATE"
         android:protectionLevel="signature" />
 
+    <!-- Lets the taplo companion app (Android Auto Navi) bind to TaploLinkService. Signature, so
+         only an app signed with this same key can draw the second screen. See contract/TaploLink. -->
+    <permission
+        android:name="${applicationId}.permission.TAPLO_LINK"
+        android:protectionLevel="signature" />
+
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -259,6 +265,10 @@
             </intent-filter>
         </service>
         <service android:name=".location.GpsLocationService" />
+        <service
+            android:name=".secondscreen.taplo.TaploLinkService"
+            android:exported="true"
+            android:permission="${applicationId}.permission.TAPLO_LINK" />
         <service
             android:name=".main.FloatingButtonService"
             android:exported="false" />

@@ -24,7 +24,7 @@ class SecondScreenOutputPolicyTest {
     fun `each output announces only its own availability`() {
         val onlyNetwork = Availability(network = panel)
         assertEquals(panel, SecondScreenOutputPolicy.target(Output.NETWORK, onlyNetwork))
-        for (other in listOf(Output.ANDROID_DISPLAY, Output.MS912X, Output.USB_DISPLAY)) {
+        for (other in listOf(Output.ANDROID_DISPLAY, Output.MS912X, Output.USB_DISPLAY, Output.TAPLO_APP)) {
             assertNull(SecondScreenOutputPolicy.target(other, onlyNetwork))
         }
     }
@@ -33,6 +33,7 @@ class SecondScreenOutputPolicyTest {
     fun `only the Android display and the MacroSilicon adapter are decoded here`() {
         assertTrue(SecondScreenOutputPolicy.decodesOnHeadUnit(Output.ANDROID_DISPLAY))
         assertTrue(SecondScreenOutputPolicy.decodesOnHeadUnit(Output.MS912X))
+        assertTrue(SecondScreenOutputPolicy.decodesOnHeadUnit(Output.TAPLO_APP))
         assertFalse(SecondScreenOutputPolicy.decodesOnHeadUnit(Output.NETWORK))
         assertFalse(SecondScreenOutputPolicy.decodesOnHeadUnit(Output.USB_DISPLAY))
     }

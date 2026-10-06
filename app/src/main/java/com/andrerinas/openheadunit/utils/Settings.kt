@@ -1060,6 +1060,22 @@ class Settings(private val context: Context) {
                 .apply()
         }
 
+    /** The size the taplo companion app last reported, or the cluster default until it has. */
+    var taploAppLastTarget: SecondScreenOutputPolicy.Target
+        get() {
+            val w = prefs.getInt("taplo-app-width", 0)
+            val h = prefs.getInt("taplo-app-height", 0)
+            return if (w > 0 && h > 0) SecondScreenOutputPolicy.Target(w, h, prefs.getInt("taplo-app-dpi", 160))
+            else SecondScreenOutputPolicy.TAPLO_APP_DEFAULT
+        }
+        set(value) {
+            prefs.edit()
+                .putInt("taplo-app-width", value.widthPx)
+                .putInt("taplo-app-height", value.heightPx)
+                .putInt("taplo-app-dpi", value.densityDpi)
+                .apply()
+        }
+
     /**
      * The Android display the auxiliary stream is shown on, or [DisplayTargetPolicy.AUX_DISPLAY_AUTO]
      * for the first presentation display. A saved id that has gone away falls back to that too.

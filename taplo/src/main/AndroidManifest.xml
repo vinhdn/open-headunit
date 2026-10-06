@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Defined by the head unit (applicationId com.qinggan.androidauto); see contract/TaploLink. -->
+    <uses-permission android:name="com.qinggan.androidauto.permission.TAPLO_LINK" />
+
+    <!-- Android 11+ hides other packages unless asked for; the head unit is the one this binds to. -->
+    <queries>
+        <package android:name="com.qinggan.androidauto" />
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_taplo"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.Material.NoActionBar.Fullscreen">
+
+        <!-- Embedded by the launcher (or Pateo) in an ActivityView, so it has to be resizeable and
+             must survive the slot changing size without being recreated. -->
+        <activity
+            android:name=".TaploActivity"
+            android:exported="true"
+            android:resizeableActivity="true"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|uiMode|keyboardHidden"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="state_not_connected_title">Android Auto chưa kết nối</string>
+    <string name="state_not_connected_text">Kết nối điện thoại với xe để hiển thị dẫn đường trên taplo.</string>
+    <string name="state_not_selected_title">Màn hình phụ đang tắt</string>
+    <string name="state_not_selected_text">Trong Android Auto, mở Cài đặt, Màn hình phụ, và chọn ứng dụng taplo.</string>
+    <string name="state_no_head_unit_title">Chưa cài Android Auto</string>
+    <string name="state_no_head_unit_text">Ứng dụng này hiển thị màn hình phụ của ứng dụng Android Auto, ứng dụng đó cần được cài và ký cùng một khóa.</string>
+    <string name="state_waiting_title">Đang chờ dẫn đường</string>
+    <string name="state_waiting_text">Hình sẽ hiện ngay khi điện thoại gửi sang.</string>
+</resources>
