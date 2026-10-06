@@ -6,6 +6,7 @@ import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.view.Surface
 import android.view.TextureView
+import com.andrerinas.openheadunit.decoder.video.DecoderStopPolicy
 import com.andrerinas.openheadunit.decoder.video.VideoDecoder
 import com.andrerinas.openheadunit.utils.AppLog
 
@@ -52,11 +53,16 @@ internal class AuxPictureView(
         }
     }
 
-    /** Only if it is still ours: a decoder that has already moved on must not be stopped by the window that used to own it. */
+    /**
+     * Only if it is still ours: a decoder that has already moved on must not be stopped by the
+     * window that used to own it. Stopped as a surface loss, never as the session ending: the
+     * stream goes on, and the codec type and parameter sets learned from it have to survive.
+     */
     fun release(reason: String) {
         val current = surface ?: return
         surface = null
-        decoder.stopIfCurrentSurface(current, reason)
+        AppLog.i("AuxPictureView: releasing the surface on display $displayId because $reason")
+        decoder.stopIfCurrentSurface(current, DecoderStopPolicy.REASON_SURFACE_DESTROYED)
         current.release()
     }
 }

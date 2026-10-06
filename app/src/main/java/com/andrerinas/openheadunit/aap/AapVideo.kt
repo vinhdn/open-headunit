@@ -19,6 +19,12 @@ internal class AapVideo(
     private val settings: Settings,
     private val onAccessUnit: ((ByteArray, Int, Int) -> Unit)? = null,
     private val onFrameCorrupted: () -> Unit,
+    /**
+     * The codec this stream was announced with. The main picture's comes from Settings; the
+     * auxiliary display's is always H.264, and asking for the main one there rebuilt the decoder as
+     * HEVC whenever it restarted mid-stream, before an SPS could say otherwise.
+     */
+    private val requestedCodec: () -> String = { settings.videoCodec },
 ) {
 
     companion object {
@@ -381,7 +387,7 @@ internal class AapVideo(
 
     private fun emit(buf: ByteArray, offset: Int, length: Int) {
         onAccessUnit?.invoke(buf, offset, length)
-        videoDecoder?.decode(buf, offset, length, settings.forceSoftwareDecoding, settings.videoCodec)
+        videoDecoder?.decode(buf, offset, length, settings.forceSoftwareDecoding, requestedCodec())
     }
 
     fun release() {
