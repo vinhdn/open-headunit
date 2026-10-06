@@ -7,6 +7,11 @@ plugins {
     kotlin("android")
 }
 
+// The system flavor shares the system user id, so it must carry the head unit ROM's platform key.
+// platform.properties (git-ignored) names it: storeFile, storePassword, keyAlias, keyPassword.
+val platformSigning: Properties? = rootProject.file("platform.properties").takeIf { it.exists() }
+    ?.let { f -> Properties().apply { FileInputStream(f).use { load(it) } } }
+
 // The taplo companion: what a BAIC/Qinggan launcher embeds on the instrument cluster. It draws
 // nothing itself; the head unit decodes the second Android Auto screen into its surface over
 // contract/TaploLink. Its label carries "Navi" because that is how the launcher recognises a map.
@@ -23,8 +28,22 @@ android {
         setProperty("archivesBaseName", "${applicationId}_${versionName}")
     }
 
+    // Matches the head unit: standard pairs with its github/playstore builds, system with its
+    // system build. The two must agree, or the signature permission on TaploLink refuses the bind.
+    flavorDimensions.add("distribution")
+    productFlavors {
+        create("standard") { dimension = "distribution" }
+        create("system") { dimension = "distribution" }
+    }
+
     // Must match the head unit's key: TaploLink's permission is a signature permission.
     signingConfigs {
+        if (platformSigning != null) create("platform") {
+            storeFile = rootProject.file(platformSigning.getProperty("storeFile"))
+            storePassword = platformSigning.getProperty("storePassword")
+            keyAlias = platformSigning.getProperty("keyAlias")
+            keyPassword = platformSigning.getProperty("keyPassword")
+        }
         create("release") {
             rootProject.file("headunit-release-key.jks").takeIf { it.exists() }?.let { storeFile = it }
             keyAlias = "headunit-revived"
@@ -59,6 +78,17 @@ android {
 
     kotlinOptions {
         (this as KotlinJvmOptions).jvmTarget = "1.8"
+    }
+}
+
+// The system flavor, debug and release alike, is signed with the platform key.
+androidComponents {
+    onVariants(selector().withFlavor("distribution" to "system")) { variant ->
+        if (platformSigning == null) {
+            logger.warn("${variant.name}: no platform.properties, so this build will not install as a system app")
+            return@onVariants
+        }
+        variant.signingConfig?.setConfig(android.signingConfigs.getByName("platform"))
     }
 }
 

@@ -82,3 +82,8 @@ deploy_old_tablet.sh
 .antigravitycli
 .agents
 dev-note8.ps1
+
+# Platform signing key for release builds (sharedUserId=android.uid.system)
+platform.properties
+*.pk8
+*.jks

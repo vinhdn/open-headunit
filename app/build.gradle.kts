@@ -9,6 +9,12 @@ plugins {
     kotlin("kapt")
 }
 
+// The system flavor shares the system user id, so it must carry the head unit ROM's platform key.
+// platform.properties (git-ignored) names it: storeFile, storePassword, keyAlias, keyPassword, and
+// optionally versionCode.
+val platformSigning: Properties? = rootProject.file("platform.properties").takeIf { it.exists() }
+    ?.let { f -> Properties().apply { FileInputStream(f).use { load(it) } } }
+
 android {
     compileSdk = 36
     ndkVersion = "29.0.14206865"
@@ -126,9 +132,29 @@ android {
             dimension = "distribution"
             // Default minSdk 16 from defaultConfig is used
         }
+        // The github build as a system app for BAIC/Qinggan head units: sharedUserId
+        // android.uid.system, signed with the platform key from platform.properties.
+        create("system") {
+            dimension = "distribution"
+        }
+    }
+
+    // The system flavor is the github build with a different manifest, so it takes github's code
+    // (the VPN that Self Mode needs) and github's strings rather than keeping a copy of either.
+    sourceSets {
+        getByName("system") {
+            java.srcDir("src/github/java")
+            res.srcDir("src/github/res")
+        }
     }
 
     signingConfigs {
+        if (platformSigning != null) create("platform") {
+            storeFile = rootProject.file(platformSigning.getProperty("storeFile"))
+            storePassword = platformSigning.getProperty("storePassword")
+            keyAlias = platformSigning.getProperty("keyAlias")
+            keyPassword = platformSigning.getProperty("keyPassword")
+        }
         getByName("debug") {
             // storeFile = file("../keystore.jkc")
             // storePassword = property("HEADUNIT_KEYSTORE_PASSWORD") as String
@@ -237,10 +263,27 @@ android {
     }
 }
 
+// The system flavor, debug and release alike: a system-uid app installs only with the platform key,
+// and a head unit already carries a system build of this package, over which Android refuses a
+// lower versionCode, so platform.properties may raise it (versionCode=...).
+androidComponents {
+    onVariants(selector().withFlavor("distribution" to "system")) { variant ->
+        if (platformSigning == null) {
+            logger.warn("${variant.name}: no platform.properties, so this build will not install as a system app")
+            return@onVariants
+        }
+        variant.signingConfig?.setConfig(android.signingConfigs.getByName("platform"))
+        platformSigning.getProperty("versionCode")?.toIntOrNull()?.let { code ->
+            variant.outputs.forEach { it.versionCode.set(code) }
+        }
+    }
+}
+
 dependencies {
     // Conscrypt (Flavor specific: 2.6.1 for Playstore 16KB alignment; 2.5.3 for Github minSdk 16)
     "playstoreImplementation"("org.conscrypt:conscrypt-android:2.6.1")
     "githubImplementation"("org.conscrypt:conscrypt-android:2.5.3")
+    "systemImplementation"("org.conscrypt:conscrypt-android:2.5.3")
 
     implementation("com.google.protobuf:protobuf-java:3.25.5")
     implementation("androidx.activity:activity-ktx:1.8.2")
