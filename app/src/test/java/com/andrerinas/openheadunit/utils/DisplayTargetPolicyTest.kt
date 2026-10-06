@@ -100,4 +100,37 @@ class DisplayTargetPolicyTest {
     fun `the built-in display is never reported as lost`() {
         assertFalse(DisplayTargetPolicy.lostTargetDisplay(0, emptyList()))
     }
+
+    @Test
+    fun `the second screen takes the first presentation display when set to automatic`() {
+        val displays = listOf(builtIn, display(3, presentation = false), display(5), display(4))
+        val choice = DisplayTargetPolicy.chooseAux(DisplayTargetPolicy.AUX_DISPLAY_AUTO, 0, displays)
+        assertEquals(5, choice?.displayId)
+    }
+
+    @Test
+    fun `the second screen keeps the saved display while it is attached`() {
+        val displays = listOf(builtIn, display(5), display(4))
+        assertEquals(4, DisplayTargetPolicy.chooseAux(4, 0, displays)?.displayId)
+    }
+
+    @Test
+    fun `a saved second screen that went away falls back to the first presentation display`() {
+        val displays = listOf(builtIn, display(5), display(4))
+        assertEquals(5, DisplayTargetPolicy.chooseAux(9, 0, displays)?.displayId)
+    }
+
+    @Test
+    fun `the second screen never takes the projection's display or an unusable one`() {
+        val displays = listOf(builtIn, display(5), display(6, usable = false))
+        assertEquals(null, DisplayTargetPolicy.chooseAux(DisplayTargetPolicy.AUX_DISPLAY_AUTO, 5, displays))
+        assertEquals(null, DisplayTargetPolicy.chooseAux(5, 5, displays))
+    }
+
+    @Test
+    fun `a non-presentation display is used only when it was chosen by hand`() {
+        val displays = listOf(builtIn, display(3, presentation = false))
+        assertEquals(null, DisplayTargetPolicy.chooseAux(DisplayTargetPolicy.AUX_DISPLAY_AUTO, 0, displays))
+        assertEquals(3, DisplayTargetPolicy.chooseAux(3, 0, displays)?.displayId)
+    }
 }

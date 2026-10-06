@@ -36,10 +36,19 @@ object SecondScreenHub {
     private var current: SecondScreenOutput? = null
 
     /**
+     * The Android display the last announcement measured, so the window opens on that same panel
+     * even if another one has been attached since. Null when the output is not an Android display.
+     */
+    @Volatile
+    var announcedDisplayId: Int? = null
+        private set
+
+    /**
      * The size to announce for the chosen output, recorded so the session opens that same output.
      * Called once per service discovery.
      */
     fun announce(context: Context, settings: Settings): Target? {
+        announcedDisplayId = null
         if (!settings.auxDisplayEnabled) {
             announced = null
             announcedTarget = null
@@ -63,10 +72,8 @@ object SecondScreenHub {
     }
 
     private fun androidDisplayTarget(context: Context, settings: Settings): Target? {
-        val projectionDisplayId = DisplayTargets.choose(context, settings).displayId
-        val panel = DisplayTargets.list(context).firstOrNull {
-            it.displayId == settings.auxDisplayId && it.isUsable && it.displayId != projectionDisplayId
-        } ?: return null
+        val panel = DisplayTargets.auxDisplay(context, settings) ?: return null
+        announcedDisplayId = panel.displayId
         return Target(panel.widthPx, panel.heightPx, panel.densityDpi)
     }
 

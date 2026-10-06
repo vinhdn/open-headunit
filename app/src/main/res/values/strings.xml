@@ -315,6 +315,8 @@
     <string name="aux_display_hint">Asks Android Auto for a second picture for an instrument cluster or passenger screen. Needs Google Maps on the phone, and applies at the next connection.</string>
     <string name="aux_android_display">Display for the second screen</string>
     <string name="aux_android_display_none">No other display is attached</string>
+    <string name="aux_android_display_auto">Automatic (first presentation display)</string>
+    <string name="aux_android_display_auto_now">Automatic: %1$s</string>
     <string name="aux_output_android_display">Another Android display (HDMI, USB-C)</string>
     <string name="aux_output_network">Network stream</string>
     <string name="aux_output_ms912x">USB HDMI adapter (MacroSilicon)</string>

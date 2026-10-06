@@ -49,6 +49,28 @@ object DisplayTargets {
     }
 
     /**
+     * The display the second screen goes on, or null when none is attached. Asked by both the
+     * announcement and the window, so the size the phone is told is the panel that shows it.
+     */
+    fun auxDisplay(context: Context, settings: Settings): DisplayTargetPolicy.DisplayInfo? {
+        val displays = list(context)
+        val choice = DisplayTargetPolicy.chooseAux(
+            savedDisplayId = settings.auxDisplayId,
+            projectionDisplayId = choose(context, settings).displayId,
+            displays = displays,
+        )
+        val line = if (choice == null) "DisplayTargets: no display for the second screen"
+        else "DisplayTargets: second screen on display ${choice.displayId}, ${choice.reason}"
+        if (line != lastAuxLogged) {
+            lastAuxLogged = line
+            AppLog.i(line)
+        }
+        return choice?.let { c -> displays.first { it.displayId == c.displayId } }
+    }
+
+    private var lastAuxLogged: String? = null
+
+    /**
      * The `startActivity` options that put the projection on the chosen display, or null when there
      * is nothing to say: the built-in panel, or a release with no way to name a display.
      */

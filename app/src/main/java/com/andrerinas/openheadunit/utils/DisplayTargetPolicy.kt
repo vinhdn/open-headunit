@@ -11,6 +11,9 @@ object DisplayTargetPolicy {
     /** `Display.DEFAULT_DISPLAY`, repeated so this object needs no Android import. */
     const val DEFAULT_DISPLAY_ID = 0
 
+    /** Stored as the second screen's display when it should take whichever presentation display is first. */
+    const val AUX_DISPLAY_AUTO = -1
+
     /** Stored in [Settings.preferredDisplayMode] by ordinal, so the order is load-bearing. */
     enum class Mode {
         /** The built-in panel, which is what every unit did before this setting existed. */
@@ -76,4 +79,25 @@ object DisplayTargetPolicy {
     fun lostTargetDisplay(activeDisplayId: Int, displays: List<DisplayInfo>): Boolean =
         activeDisplayId != DEFAULT_DISPLAY_ID &&
             displays.none { it.displayId == activeDisplayId && it.isUsable }
+
+    /**
+     * Which display carries the second screen, or null when there is nowhere to put it.
+     *
+     * The saved display while it is attached; otherwise the first presentation display Android
+     * reports, the way `DisplayManager.getDisplays(DISPLAY_CATEGORY_PRESENTATION)[0]` would answer.
+     * Display ids are handed out again on every attach, so a saved id going stale after a restart is
+     * the normal case, not a fault. Never the display the projection itself is on.
+     */
+    fun chooseAux(savedDisplayId: Int, projectionDisplayId: Int, displays: List<DisplayInfo>): Choice? {
+        val usable = displays.filter { it.isUsable && it.displayId != projectionDisplayId }
+        if (savedDisplayId != AUX_DISPLAY_AUTO) {
+            usable.firstOrNull { it.displayId == savedDisplayId }?.let {
+                return Choice(it.displayId, "the chosen display ${it.name} is attached")
+            }
+        }
+        val first = usable.firstOrNull { it.isPresentation } ?: return null
+        val why = if (savedDisplayId == AUX_DISPLAY_AUTO) "it is the first presentation display"
+        else "the chosen display $savedDisplayId is gone, and it is the first presentation display"
+        return Choice(first.displayId, "${first.name} because $why")
+    }
 }

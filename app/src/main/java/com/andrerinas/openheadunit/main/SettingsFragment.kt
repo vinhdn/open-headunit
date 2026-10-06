@@ -4702,19 +4702,28 @@ class SettingsFragment : Fragment() {
     private fun addAuxAndroidDisplayRow(items: MutableList<SettingItem>) {
         val projectionDisplayId = DisplayTargets.choose(requireContext(), settings).displayId
         val attached = DisplayTargets.candidates(requireContext()).filter { it.displayId != projectionDisplayId }
-        val labels = attached.map { "${it.name} (${it.widthPx}x${it.heightPx})" }
-        val selected = attached.indexOfFirst { it.displayId == settings.auxDisplayId }
+        fun label(d: DisplayTargetPolicy.DisplayInfo) = "${d.name} (${d.widthPx}x${d.heightPx})"
+        // Automatic first, which is what an unconfigured unit does: display ids change on attach.
+        val labels = listOf(getString(R.string.aux_android_display_auto)) + attached.map { label(it) }
+        val ids = listOf(DisplayTargetPolicy.AUX_DISPLAY_AUTO) + attached.map { it.displayId }
+        val selected = ids.indexOf(settings.auxDisplayId).takeIf { it >= 0 } ?: 0
+        val resolved = DisplayTargets.auxDisplay(requireContext(), settings)
+        val value = when {
+            resolved == null -> getString(R.string.aux_android_display_none)
+            selected == 0 -> getString(R.string.aux_android_display_auto_now, label(resolved))
+            else -> label(resolved)
+        }
         items.add(SettingItem.SettingEntry(
             stableId = "auxAndroidDisplay",
             nameResId = R.string.aux_android_display,
-            value = labels.getOrNull(selected) ?: getString(R.string.aux_android_display_none),
+            value = value,
             searchKeywords = labels.joinToString(" "),
             onClick = { _ ->
-                if (labels.isNotEmpty()) {
+                if (attached.isNotEmpty()) {
                     MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
                         .setTitle(R.string.aux_android_display)
                         .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
-                            attached.getOrNull(which)?.let { settings.auxDisplayId = it.displayId }
+                            ids.getOrNull(which)?.let { settings.auxDisplayId = it }
                             settings.commit()
                             dialog.dismiss()
                             updateSettingsList()

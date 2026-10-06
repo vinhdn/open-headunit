@@ -22,6 +22,7 @@ import com.andrerinas.openheadunit.aap.protocol.messages.Messages
 import com.andrerinas.openheadunit.aap.protocol.messages.ScrollWheelEvent
 import com.andrerinas.openheadunit.aap.protocol.messages.SensorEvent
 import com.andrerinas.openheadunit.aap.protocol.messages.VideoFocusEvent
+import com.andrerinas.openheadunit.secondscreen.AuxDisplayHost
 import com.andrerinas.openheadunit.secondscreen.SecondScreenHub
 import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
 import com.andrerinas.openheadunit.decoder.audio.MicrophonePolicy
@@ -766,6 +767,7 @@ class AapTransport(
         videoLane.release()
         auxVideoLane?.release()
         SecondScreenHub.close()
+        AuxDisplayHost.dismissForSession()
         auxVideoLane = null
 
         aapRead = null
@@ -919,6 +921,7 @@ class AapTransport(
         )
         pollHandler?.sendEmptyMessage(MSG_POLL)
         SecondScreenHub.open(context, settings) { requestAuxKeyframe("the second screen asked for one") }
+        AuxDisplayHost.showForSession(context) { requestAuxKeyframe("the auxiliary surface was recreated") }
     }
 
     private fun handshake(connection: ProjectionConnection): Boolean {

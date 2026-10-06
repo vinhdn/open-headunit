@@ -43,10 +43,7 @@ import com.andrerinas.openheadunit.decoder.video.VideoDimensionsListener
 import com.andrerinas.openheadunit.utils.AppLog
 import com.andrerinas.openheadunit.utils.BluetoothHelper
 import com.andrerinas.openheadunit.utils.DisplayTargets
-import com.andrerinas.openheadunit.view.AuxDisplayPresentation
-import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
-import com.andrerinas.openheadunit.secondscreen.SecondScreenHub
-import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
+import com.andrerinas.openheadunit.secondscreen.AuxDisplayHost
 import com.andrerinas.openheadunit.connection.self.SelfModeCallRaisePolicy
 import com.andrerinas.openheadunit.connection.usb.UsbSwitchClaim
 import com.andrerinas.openheadunit.decoder.audio.CallState
@@ -1492,44 +1489,14 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
         return true
     }
 
-    private var auxPresentation: AuxDisplayPresentation? = null
-
     /**
-     * Brings up the auxiliary display's window, when one was asked for and is attached.
-     *
-     * Hosted by this activity rather than the service because a Presentation shown from a service
-     * needs the overlay permission, which this feature should not make a condition of working.
+     * Brings up the second screen's window when this activity has to host it, which is when there is
+     * no overlay permission. With the permission the service owns it; see [AuxDisplayHost].
      */
     private fun showAuxDisplay() {
-        if (!settings.auxDisplayEnabled) return
-        if (settings.auxOutput != SecondScreenOutputPolicy.Output.ANDROID_DISPLAY) return
-        if (auxPresentation?.isShowing == true) return
-        val display = DisplayTargets.display(this, settings.auxDisplayId) ?: run {
-            AppLog.w("AapProjectionActivity: the auxiliary display ${settings.auxDisplayId} is not attached")
-            return
+        AuxDisplayHost.showFromActivity(this, commManager.isConnected) {
+            commManager.requestAuxKeyframe("the auxiliary surface was recreated")
         }
-        try {
-            // The size announced for this panel says how much margin each frame carries.
-            val panel = SecondScreenHub.announcedTarget
-            val (scaleX, scaleY) = if (panel == null) 1f to 1f else AuxDisplayProfilePolicy.marginCropScale(
-                AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, panel.densityDpi)
-            )
-            val presentation = AuxDisplayPresentation(this, display, App.provide(this).requireAuxVideoDecoder(), scaleX, scaleY) {
-                commManager.requestAuxKeyframe("the auxiliary surface was recreated")
-            }
-            presentation.show()
-            auxPresentation = presentation
-            AppLog.i("AapProjectionActivity: the auxiliary display is up on ${display.displayId}")
-        } catch (e: Exception) {
-            // Never fatal to the session: the main picture is the one the driver is using.
-            AppLog.e("AapProjectionActivity: could not open the auxiliary display: ${e.message}")
-            auxPresentation = null
-        }
-    }
-
-    private fun dismissAuxDisplay() {
-        try { auxPresentation?.dismiss() } catch (_: Exception) {}
-        auxPresentation = null
     }
 
     /**
@@ -2332,7 +2299,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
 
     override fun onDestroy() {
         super.onDestroy()
-        dismissAuxDisplay()
+        AuxDisplayHost.dismissFromActivity()
         autoStartOfferTimer?.cancel()
         autoStartOfferTimer = null
         HeadUnitScreenConfig.onMarginsDiverged = null

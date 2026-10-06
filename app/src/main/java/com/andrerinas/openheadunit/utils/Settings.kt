@@ -1060,9 +1060,12 @@ class Settings(private val context: Context) {
                 .apply()
         }
 
-    /** The Android display the auxiliary stream is shown on. */
+    /**
+     * The Android display the auxiliary stream is shown on, or [DisplayTargetPolicy.AUX_DISPLAY_AUTO]
+     * for the first presentation display. A saved id that has gone away falls back to that too.
+     */
     var auxDisplayId: Int
-        get() = prefs.getInt("aux-display-id", DisplayTargetPolicy.DEFAULT_DISPLAY_ID)
+        get() = prefs.getInt("aux-display-id", DisplayTargetPolicy.AUX_DISPLAY_AUTO)
         set(value) { prefs.edit().putInt("aux-display-id", value).apply() }
 
     /** Whether the second sink is announced as an auxiliary display or as the instrument cluster. */
