@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The system flavor: the github build, run as the system user like a BAIC/Qinggan head unit's own
+     apps, so there are no USB or overlay permission prompts and the launcher may embed it. It only
+     installs on a ROM whose platform key signed it (platform.properties). Code and resources are
+     the github flavor's; this manifest repeats its VPN service, since a flavor has one manifest. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sharedUserId="android.uid.system">
+    <application>
+        <service
+            android:name=".aap.DummyVpnService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>
