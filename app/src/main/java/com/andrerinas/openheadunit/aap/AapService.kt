@@ -1127,7 +1127,7 @@ class AapService : Service() {
 
     /** Initialises [NightModeManager] and forwards night-mode changes to Android Auto via AAP. */
     private fun setupNightMode() {
-        nightModeManager = NightModeManager(this, App.provide(this).settings) { isNight ->
+        nightModeManager = NightModeManager(App.provide(this).settings) { isNight ->
             AppLog.i("NightMode update: $isNight")
             commManager.send(NightModeEvent(isNight))
             // Also notify local components (for AA monochrome filter)

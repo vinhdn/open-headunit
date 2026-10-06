@@ -261,25 +261,9 @@ class Settings(private val context: Context) {
         }
 
     var nightMode: NightMode
-        get() {
-            val value = prefs.getInt("night-mode", 0)
-            val mode = NightMode.fromInt(value)
-            return mode!!
-        }
+        get() = NightMode.fromInt(prefs.getInt("night-mode", NightMode.DAY.value))
         set(nightMode) {
             prefs.edit().putInt("night-mode", nightMode.value).apply()
-        }
-
-    var nightModeThresholdLux: Int
-        get() = prefs.getInt("night-mode-threshold-lux", 100)
-        set(value) {
-            prefs.edit().putInt("night-mode-threshold-lux", value).apply()
-        }
-
-    var nightModeThresholdBrightness: Int
-        get() = prefs.getInt("night-mode-threshold-brightness", 100)
-        set(value) {
-            prefs.edit().putInt("night-mode-threshold-brightness", value).apply()
         }
 
     var keyCodes: MutableMap<Int, Int>
@@ -1676,96 +1660,20 @@ class Settings(private val context: Context) {
         }
     }
 
+    /**
+     * What Android Auto is told, chosen by hand. The values are the ones stored before the
+     * automatic modes were removed; a unit that had one of those comes back as DAY.
+     */
     enum class NightMode(val value: Int) {
-        AUTO(0),
         DAY(1),
-        NIGHT(2),
-        MANUAL_TIME(3),
-        LIGHT_SENSOR(4),
-        SCREEN_BRIGHTNESS(5),
-        CAR_SIGNAL(6),
-        LOCATION(7);
+        NIGHT(2);
 
         companion object {
             private val map = NightMode.values().associateBy(NightMode::value)
-            fun fromInt(value: Int) = map[value]
+            fun fromInt(value: Int) = map[value] ?: DAY
         }
     }
 
-    var nightModeManualStart: Int
-        get() = prefs.getInt("night-mode-manual-start", 1140) // Default 19:00 (19 * 60)
-        set(value) {
-            prefs.edit().putInt("night-mode-manual-start", value).apply()
-        }
-
-    var nightModeManualEnd: Int
-        get() = prefs.getInt("night-mode-manual-end", 420) // Default 07:00 (7 * 60)
-        set(value) {
-            prefs.edit().putInt("night-mode-manual-end", value).apply()
-        }
-
-    // Shared fixed point used as the sunrise/sunset reference when [useFixedSunriseLocation]
-    // is on. Used by BOTH the app theme (AppTheme.AUTO_SUNRISE) and the Android Auto night
-    // mode (NightMode.AUTO) so head units without GPS still compute correct day/night.
-    // Defaults mirror lastKnownLocation.
-    var useFixedSunriseLocation: Boolean
-        get() = prefs.getBoolean("use-fixed-sun-location", false)
-        set(value) { prefs.edit().putBoolean("use-fixed-sun-location", value).apply() }
-
-    var fixedSunriseLatitude: Double
-        get() = java.lang.Double.longBitsToDouble(
-            prefs.getLong("fixed-sun-latitude", (32.0864169).toRawBits())
-        )
-        set(value) {
-            prefs.edit().putLong("fixed-sun-latitude", value.toRawBits()).apply()
-        }
-
-    var fixedSunriseLongitude: Double
-        get() = java.lang.Double.longBitsToDouble(
-            prefs.getLong("fixed-sun-longitude", (34.7557871).toRawBits())
-        )
-        set(value) {
-            prefs.edit().putLong("fixed-sun-longitude", value.toRawBits()).apply()
-        }
-
-
-    // Suppresses the "internet required" notice before opening the map picker once the
-    // user has chosen "don't show again".
-    var hideMapInternetNotice: Boolean
-        get() = prefs.getBoolean("hide-map-internet-notice", false)
-        set(value) { prefs.edit().putBoolean("hide-map-internet-notice", value).apply() }
-
-    // User-defined places (Home, Garage, ...) for the "Location (by area)" theme mode.
-    var geofenceLocations: List<com.andrerinas.openheadunit.location.GeofenceLocation>
-        get() = com.andrerinas.openheadunit.location.GeofenceLocation.listFromJson(
-            prefs.getString("geofence-locations", "[]")
-        )
-        set(value) {
-            val json = com.andrerinas.openheadunit.location.GeofenceLocation.listToJson(value)
-            prefs.edit().putString("geofence-locations", json).apply()
-        }
-
-    // Appearance to use in "Location (by area)" mode when outside every saved place.
-    var locationOutsideNight: Boolean
-        get() = prefs.getBoolean("location-outside-night", false)
-        set(value) { prefs.edit().putBoolean("location-outside-night", value).apply() }
-
-    // App Theme independent threshold/time settings (separate from Night Mode)
-    var appThemeThresholdLux: Int
-        get() = prefs.getInt("app-theme-threshold-lux", 100)
-        set(value) { prefs.edit().putInt("app-theme-threshold-lux", value).apply() }
-
-    var appThemeThresholdBrightness: Int
-        get() = prefs.getInt("app-theme-threshold-brightness", 100)
-        set(value) { prefs.edit().putInt("app-theme-threshold-brightness", value).apply() }
-
-    var appThemeManualStart: Int
-        get() = prefs.getInt("app-theme-manual-start", 1140)
-        set(value) { prefs.edit().putInt("app-theme-manual-start", value).apply() }
-
-    var appThemeManualEnd: Int
-        get() = prefs.getInt("app-theme-manual-end", 420)
-        set(value) { prefs.edit().putInt("app-theme-manual-end", value).apply() }
     // The stored key keeps the old spelling: renaming it would reset the setting on every unit.
     var showPerformanceOverlay: Boolean
         get() = prefs.getBoolean("show-fps-counter", false)
@@ -2206,21 +2114,18 @@ class Settings(private val context: Context) {
         }
     }
 
+    /**
+     * The app's own appearance, chosen by hand. The values are the ones stored before the
+     * automatic themes were removed; a unit that had one of those comes back as CLEAR.
+     */
     enum class AppTheme(val value: Int) {
-        AUTOMATIC(0),
         CLEAR(1),
         DARK(2),
-        EXTREME_DARK(3),
-        AUTO_SUNRISE(4),
-        MANUAL_TIME(5),
-        LIGHT_SENSOR(6),
-        SCREEN_BRIGHTNESS(7),
-        CAR_SIGNAL(8),
-        LOCATION(9);
+        EXTREME_DARK(3);
 
         companion object {
             private val map = values().associateBy(AppTheme::value)
-            fun fromInt(value: Int) = map[value] ?: AUTOMATIC
+            fun fromInt(value: Int) = map[value] ?: CLEAR
         }
     }
 
@@ -2269,10 +2174,7 @@ class Settings(private val context: Context) {
         set(value) { prefs.edit().putInt("aa-desaturation-level", value).apply() }
 
     var appTheme: AppTheme
-        get() {
-            val value = prefs.getInt("app-theme", 0)
-            return AppTheme.fromInt(value) ?: AppTheme.AUTOMATIC
-        }
+        get() = AppTheme.fromInt(prefs.getInt("app-theme", AppTheme.CLEAR.value))
         set(theme) {
             prefs.edit().putInt("app-theme", theme.value).apply()
         }

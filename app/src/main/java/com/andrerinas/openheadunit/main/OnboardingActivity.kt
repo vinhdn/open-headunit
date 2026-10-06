@@ -766,12 +766,11 @@ class OnboardingActivity : BaseActivity() {
 
     private fun showThemeDialog() {
         val labels = resources.getStringArray(R.array.app_theme)
+        val themes = Settings.AppTheme.values()
         MaterialAlertDialogBuilder(this, R.style.DarkAlertDialog)
             .setTitle(R.string.onb_appearance_theme_label)
-            .setSingleChoiceItems(labels, settings.appTheme.value) { dialog, which ->
-                val newTheme = Settings.AppTheme.values().firstOrNull { it.value == which }
-                    ?: Settings.AppTheme.AUTOMATIC
-                settings.appTheme = newTheme
+            .setSingleChoiceItems(themes.map { labels[it.value] }.toTypedArray(), themes.indexOf(settings.appTheme)) { dialog, which ->
+                settings.appTheme = themes[which]
                 updateThemeButtonText()
                 dialog.dismiss()
                 AppThemeManager.applyStaticTheme(settings)
@@ -782,10 +781,11 @@ class OnboardingActivity : BaseActivity() {
 
     private fun showNightModeDialog() {
         val labels = resources.getStringArray(R.array.night_mode)
+        val modes = Settings.NightMode.values()
         MaterialAlertDialogBuilder(this, R.style.DarkAlertDialog)
             .setTitle(R.string.onb_appearance_night_label)
-            .setSingleChoiceItems(labels, settings.nightMode.value) { dialog, which ->
-                settings.nightMode = Settings.NightMode.fromInt(which) ?: Settings.NightMode.AUTO
+            .setSingleChoiceItems(modes.map { labels[it.value] }.toTypedArray(), modes.indexOf(settings.nightMode)) { dialog, which ->
+                settings.nightMode = modes[which]
                 updateNightButtonText()
                 dialog.dismiss()
             }

@@ -77,8 +77,6 @@ object SettingsBackupManager {
         "show-navigation-notifications" to ValueType.BOOLEAN,
         Settings.KEY_SYNC_MEDIA_SESSION_AA_METADATA to ValueType.BOOLEAN,
         "night-mode" to ValueType.INT,
-        "night-mode-threshold-lux" to ValueType.INT,
-        "night-mode-threshold-brightness" to ValueType.INT,
         "key-codes" to ValueType.STRING_SET,
         Settings.KEY_LOG_LEVEL to ValueType.INT,
         // Where the log comes from and where it lands. A round that asks for a particular capture
@@ -170,12 +168,6 @@ object SettingsBackupManager {
         "media-volume-offset" to ValueType.INT,
         "assistant-volume-offset" to ValueType.INT,
         "navigation-volume-offset" to ValueType.INT,
-        "night-mode-manual-start" to ValueType.INT,
-        "night-mode-manual-end" to ValueType.INT,
-        "app-theme-threshold-lux" to ValueType.INT,
-        "app-theme-threshold-brightness" to ValueType.INT,
-        "app-theme-manual-start" to ValueType.INT,
-        "app-theme-manual-end" to ValueType.INT,
         "show-fps-counter" to ValueType.BOOLEAN,
         "overlay-position" to ValueType.INT,
         "overlay-fields" to ValueType.INT,
@@ -530,6 +522,6 @@ object SettingsBackupManager {
         Settings.syncAutoStartBtMacsToDeviceStorage(context, settings.autoStartBluetoothDeviceMacs)
         Settings.syncUsbBlacklistToDeviceStorage(context, settings.usbBlacklist)
         Settings.setUsbAttachedActivityEnabled(context, settings.listenForUsbDevices)
-        AppThemeManager.reapply(context, settings)
+        AppThemeManager.applyStaticTheme(settings)
     }
 }

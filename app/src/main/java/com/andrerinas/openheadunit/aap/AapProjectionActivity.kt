@@ -539,7 +539,7 @@ class AapProjectionActivity : SurfaceActivity(), IProjectionView.Callbacks, Vide
                 })
             }
 
-            updateDesaturation(com.andrerinas.openheadunit.utils.NightMode(settings, false).current)
+            updateDesaturation(settings.nightMode == com.andrerinas.openheadunit.utils.Settings.NightMode.NIGHT)
 
             if (settings.showPerformanceOverlay && !performanceOverlay.isAttached) {
                 attachPerformanceOverlay()

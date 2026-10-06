@@ -392,12 +392,12 @@ class QuickSettingsFragment : DialogFragment() {
     }
 
     private fun showNightModeDialog() {
-        val nightModeTitles = resources.getStringArray(R.array.night_mode)
+        val labels = resources.getStringArray(R.array.night_mode)
+        val modes = Settings.NightMode.values()
         MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
             .setTitle(R.string.night_mode)
-            .setSingleChoiceItems(nightModeTitles, settings.nightMode.value) { dialog, which ->
-                val newMode = Settings.NightMode.fromInt(which) ?: Settings.NightMode.AUTO
-                settings.nightMode = newMode
+            .setSingleChoiceItems(modes.map { labels[it.value] }.toTypedArray(), modes.indexOf(settings.nightMode)) { dialog, which ->
+                settings.nightMode = modes[which]
                 settings.commit()
                 notifyChange(sensorRefresh = true)
                 dialog.dismiss()

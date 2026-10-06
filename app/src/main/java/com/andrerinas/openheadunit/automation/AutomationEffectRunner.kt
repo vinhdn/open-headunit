@@ -80,11 +80,7 @@ object AutomationEffectRunner {
     }
 
     private fun setNightMode(context: Context, settings: Settings, mode: String) {
-        settings.nightMode = when (mode) {
-            "day" -> Settings.NightMode.DAY
-            "night" -> Settings.NightMode.NIGHT
-            else -> Settings.NightMode.AUTO
-        }
+        settings.nightMode = if (mode == "night") Settings.NightMode.NIGHT else Settings.NightMode.DAY
         ContextCompat.startForegroundService(
             context,
             Intent(context, AapService::class.java).apply {

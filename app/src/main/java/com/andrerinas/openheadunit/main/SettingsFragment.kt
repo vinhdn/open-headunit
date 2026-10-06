@@ -2262,10 +2262,8 @@ class SettingsFragment : Fragment() {
             nameResId = R.string.dark_mode_settings,
             value = darkModeValue,
             searchKeywords = kw(
-                R.string.night_mode, R.string.app_theme, R.string.threshold_light_title,
-                R.string.threshold_brightness_title, R.string.monochrome_icons,
-                R.string.use_gradient_background, R.string.use_extreme_dark, R.string.aa_monochrome,
-                R.string.sunrise_location_title, R.string.location_section
+                R.string.night_mode, R.string.app_theme, R.string.monochrome_icons,
+                R.string.use_gradient_background, R.string.aa_monochrome
             ),
             onClick = {
                 try {
@@ -3620,7 +3618,7 @@ class SettingsFragment : Fragment() {
         applyWirelessSideEffects(snapshot, ctx)
 
         // Re-evaluate app theme engine to immediately apply default theme
-        AppThemeManager.reapply(ctx, settings)
+        AppThemeManager.applyStaticTheme(settings)
 
         // Notify Service about Night Mode changes immediately
         val nightModeUpdateIntent = Intent(AapService.ACTION_REQUEST_NIGHT_MODE_UPDATE).apply {
@@ -3836,7 +3834,7 @@ class SettingsFragment : Fragment() {
         applyWirelessSideEffects(snapshot, ctx)
 
         // Re-evaluate app theme engine to immediately apply static or dynamic theme
-        AppThemeManager.reapply(ctx, settings)
+        AppThemeManager.applyStaticTheme(settings)
 
         // Notify Service about Night Mode changes immediately
         val nightModeUpdateIntent = Intent(AapService.ACTION_REQUEST_NIGHT_MODE_UPDATE).apply {
