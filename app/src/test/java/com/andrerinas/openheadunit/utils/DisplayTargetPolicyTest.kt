@@ -133,4 +133,32 @@ class DisplayTargetPolicyTest {
         assertEquals(null, DisplayTargetPolicy.chooseAux(DisplayTargetPolicy.AUX_DISPLAY_AUTO, 0, displays))
         assertEquals(3, DisplayTargetPolicy.chooseAux(3, 0, displays)?.displayId)
     }
+
+    @Test
+    fun `a display the launcher embeds the app on wins over the setting`() {
+        val displays = listOf(builtIn, display(5), display(7, presentation = false))
+        assertEquals(7, DisplayTargetPolicy.choose(Mode.DEFAULT, 0, displays, embeddedDisplayId = 7).displayId)
+        assertEquals(7, DisplayTargetPolicy.choose(Mode.SECONDARY, 5, displays, embeddedDisplayId = 7).displayId)
+    }
+
+    @Test
+    fun `an embedding display that has gone away falls back to the setting`() {
+        val displays = listOf(builtIn, display(5))
+        assertEquals(0, DisplayTargetPolicy.choose(Mode.DEFAULT, 0, displays, embeddedDisplayId = 7).displayId)
+    }
+
+    @Test
+    fun `the launcher's surface hint decides embedding when it is there`() {
+        assertTrue(DisplayTargetPolicy.isEmbeddedHost("PIP", 7, isPresentation = true))
+        assertTrue(DisplayTargetPolicy.isEmbeddedHost(" pip ", 7, isPresentation = false))
+        assertFalse(DisplayTargetPolicy.isEmbeddedHost("MAIN", 7, isPresentation = false))
+        assertFalse(DisplayTargetPolicy.isEmbeddedHost("PIP", 0, isPresentation = false))
+    }
+
+    @Test
+    fun `without a hint only a non-presentation secondary display counts as embedding`() {
+        assertTrue(DisplayTargetPolicy.isEmbeddedHost(null, 7, isPresentation = false))
+        assertFalse(DisplayTargetPolicy.isEmbeddedHost(null, 7, isPresentation = true))
+        assertFalse(DisplayTargetPolicy.isEmbeddedHost(null, 0, isPresentation = false))
+    }
 }
