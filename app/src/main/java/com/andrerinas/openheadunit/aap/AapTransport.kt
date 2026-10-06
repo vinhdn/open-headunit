@@ -717,12 +717,12 @@ class AapTransport(
         // A corrupt access unit is the one fault the phone cannot heal for us inside a GOP, and
         // hasRenderedThisSession is the gate that keeps this clear of the warm-up window
         // [WarmRelaunchKeyframePolicy] owns - the same gate VideoDecoder.notifyFrameDropped uses.
-        aapVideo = AapVideo(videoDecoder, settings) {
+        aapVideo = AapVideo(videoDecoder, settings, onFrameCorrupted = {
             triggerFocusCycleRecovery(
                 escalatable = videoDecoder.hasRenderedThisSession,
                 wireCorruption = true,
             )
-        }
+        })
 
         // A rebuilt codec resumes on a P-frame and can render nothing until an IDR arrives, which
         // the phone sends on its own ~69s cadence and which nothing in AAP can request. So this is
@@ -1014,7 +1014,8 @@ class AapTransport(
         val onCorrupted = { requestAuxKeyframe("a corrupt frame") }
         // A forwarding output gets the stream as it arrives and no decoder is built for it.
         val video = if (SecondScreenOutputPolicy.decodesOnHeadUnit(output)) {
-            AapVideo(App.provide(context).requireAuxVideoDecoder(), settings, onFrameCorrupted = onCorrupted)
+            AapVideo(App.provide(context).requireAuxVideoDecoder(), settings, onFrameCorrupted = onCorrupted,
+                requestedCodec = { VideoDecoder.CodecType.H264.settingsValue })
         } else {
             AapVideo(null, settings, { buf, off, len -> SecondScreenHub.encoded()?.onAccessUnit(buf, off, len) }, onCorrupted)
         }
