@@ -249,7 +249,7 @@ object HeadUnitCommand {
     /** [ACTION_CONNECT] and [ACTION_START_SELF_MODE]: connect without raising the projection. */
     const val EXTRA_NO_UI = "no_ui"
 
-    /** `day`, `night` or `auto` for [ACTION_SET_NIGHT_MODE]. */
+    /** `day` or `night` for [ACTION_SET_NIGHT_MODE]. */
     const val EXTRA_STATE = "state"
 
     /** Bluetooth MAC for [ACTION_NATIVE_AA_POKE]; optional, see there. */

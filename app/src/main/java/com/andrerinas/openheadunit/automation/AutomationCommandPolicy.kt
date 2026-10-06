@@ -53,7 +53,7 @@ object AutomationCommandPolicy {
     /** Port of Android Auto's built-in head unit server, which is what an `ip` command targets. */
     const val HEADUNIT_SERVER_PORT = 5277
 
-    private val NIGHT_MODES = setOf("day", "night", "auto")
+    private val NIGHT_MODES = setOf("day", "night")
 
     private val LOG_LEVELS = setOf("verbose", "debug", "info", "warn", "error", "silent")
 

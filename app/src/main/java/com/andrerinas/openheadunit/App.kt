@@ -150,9 +150,7 @@ class App : Application(), Application.ActivityLifecycleCallbacks {
         // credential storage, so without this it is invisible until the user edits it.
         Settings.syncUsbBlacklistToDeviceStorage(this, settings.usbBlacklist)
 
-        // Apply app theme (runs the live manager when dynamic, or when a saved place
-        // can force the app theme even over a static base).
-        AppThemeManager.reapply(this, settings)
+        AppThemeManager.applyStaticTheme(settings)
 
         if (settings.autoKillOemApps) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -212,7 +210,6 @@ class App : Application(), Application.ActivityLifecycleCallbacks {
         const val defaultChannel = "headunit_service_v2"
         const val bootStartChannel = "headunit_boot_start"
         val appStartTime = SystemClock.elapsedRealtime()
-        var appThemeManager: AppThemeManager? = null
         var isPiPActive = false
 
         /**

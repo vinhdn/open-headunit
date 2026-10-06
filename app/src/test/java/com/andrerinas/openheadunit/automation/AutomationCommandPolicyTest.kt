@@ -256,13 +256,17 @@ class AutomationCommandPolicyTest {
     // --- validated values -----------------------------------------------------------------------
 
     @Test
-    fun `night mode accepts only the three modes, in any case`() {
+    fun `night mode accepts only day and night, in any case`() {
         assertEquals(
             AutomationCommandPolicy.Effect.SetNightMode("night"),
             single(HeadUnitCommand.ACTION_SET_NIGHT_MODE, mapOf(HeadUnitCommand.EXTRA_STATE to "NIGHT"))
         )
         assertTrue(
             single(HeadUnitCommand.ACTION_SET_NIGHT_MODE, mapOf(HeadUnitCommand.EXTRA_STATE to "dusk"))
+                is AutomationCommandPolicy.Effect.Refuse
+        )
+        assertTrue(
+            single(HeadUnitCommand.ACTION_SET_NIGHT_MODE, mapOf(HeadUnitCommand.EXTRA_STATE to "auto"))
                 is AutomationCommandPolicy.Effect.Refuse
         )
         assertTrue(

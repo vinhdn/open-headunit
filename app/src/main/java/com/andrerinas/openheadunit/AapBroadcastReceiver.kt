@@ -38,7 +38,7 @@ class AapBroadcastReceiver : BroadcastReceiver() {
         if (intent.action == LocationUpdateIntent.action) {
             val location = LocationUpdateIntent.extractLocation(intent)
 
-            // Feed the single source of truth for geofence / night-by-area evaluation.
+            // Feed the single source of truth for the newest fix.
             com.andrerinas.openheadunit.location.LocationHolder.update(location)
 
             if (component.settings.useGpsForNavigation) {
