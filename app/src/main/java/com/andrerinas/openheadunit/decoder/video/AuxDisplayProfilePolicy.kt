@@ -94,6 +94,33 @@ object AuxDisplayProfilePolicy {
     /** The phone ignores a content keycode on a cluster, so none is sent there. */
     fun announcesContent(role: Role): Boolean = role == Role.AUXILIARY
 
+    /** The largest share of the panel either inset may claim, so some picture is always left. */
+    const val MAX_INSET_PERCENT = 45
+
+    /**
+     * What the BAIC/Qinggan taplo hides at the top and bottom of its 1920x720 panel, so the taplo app
+     * output starts from there rather than from nothing.
+     */
+    const val TAPLO_INSET_TOP_PERCENT = 15
+    const val TAPLO_INSET_BOTTOM_PERCENT = 8
+
+    /** Pixels Android Auto should keep its own UI out of, at the top and bottom of the panel. */
+    data class ContentInsets(val top: Int, val bottom: Int) {
+        val isEmpty: Boolean get() = top == 0 && bottom == 0
+    }
+
+    /**
+     * The part of the panel that is covered (a bezel, a gauge, an overlay drawn over the picture),
+     * as content insets: unlike margins the phone still draws there, but it moves its turn card,
+     * its arrival bar and the car marker into what is left. Measured on the panel, not the
+     * announced frame, since margins are already outside it.
+     */
+    fun contentInsets(panelHeightPx: Int, topPercent: Int, bottomPercent: Int): ContentInsets {
+        val height = panelHeightPx.coerceAtLeast(0)
+        fun share(percent: Int) = height * percent.coerceIn(0, MAX_INSET_PERCENT) / 100
+        return ContentInsets(share(topPercent), share(bottomPercent))
+    }
+
     /** Whether a stored content choice is one the protocol allows on an auxiliary display. */
     fun contentKeycodeOrDefault(stored: Int): Int =
         if (stored == KEYCODE_TURN_CARD) KEYCODE_TURN_CARD else KEYCODE_NAVIGATION
