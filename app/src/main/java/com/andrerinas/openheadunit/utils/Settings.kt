@@ -1060,6 +1060,35 @@ class Settings(private val context: Context) {
                 .apply()
         }
 
+    /**
+     * How much of the second screen is covered at the top and the bottom, in percent of its height.
+     * Announced as content insets, so Android Auto keeps its turn card, arrival bar and car marker
+     * in the part that can be seen.
+     */
+    var auxInsetTopPercent: Int
+        get() = prefs.getInt("aux-inset-top-percent",
+            if (auxOutput == SecondScreenOutputPolicy.Output.TAPLO_APP) AuxDisplayProfilePolicy.TAPLO_INSET_TOP_PERCENT else 0)
+        set(value) { prefs.edit().putInt("aux-inset-top-percent", value).apply() }
+
+    var auxInsetBottomPercent: Int
+        get() = prefs.getInt("aux-inset-bottom-percent",
+            if (auxOutput == SecondScreenOutputPolicy.Output.TAPLO_APP) AuxDisplayProfilePolicy.TAPLO_INSET_BOTTOM_PERCENT else 0)
+        set(value) { prefs.edit().putInt("aux-inset-bottom-percent", value).apply() }
+
+    /**
+     * The density announced for the second screen, 0 for the panel's own. Android Auto lays its UI
+     * out in dp, so a higher value makes its turn card, arrival bar and text bigger, and shows less
+     * of the map around them.
+     */
+    var auxDensityDpi: Int
+        get() = prefs.getInt("aux-density-dpi", 0)
+        set(value) { prefs.edit().putInt("aux-density-dpi", value).apply() }
+
+    /** Text size of the guidance card the taplo app draws, in percent of its normal size. */
+    var taploCardTextPercent: Int
+        get() = prefs.getInt("taplo-card-text-percent", 100)
+        set(value) { prefs.edit().putInt("taplo-card-text-percent", value).apply() }
+
     /** The size the taplo companion app last reported, or the cluster default until it has. */
     var taploAppLastTarget: SecondScreenOutputPolicy.Target
         get() {

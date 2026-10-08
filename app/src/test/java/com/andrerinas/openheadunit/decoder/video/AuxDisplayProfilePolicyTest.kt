@@ -2,6 +2,7 @@ package com.andrerinas.openheadunit.decoder.video
 
 import com.andrerinas.openheadunit.aap.protocol.proto.Control
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 private typealias Resolution = Control.Service.MediaSinkService.VideoConfiguration.VideoCodecResolutionType
@@ -92,5 +93,18 @@ class AuxDisplayProfilePolicyTest {
         val onPanel = AuxDisplayProfilePolicy.profileFor(1024, 600, 160)
         assertEquals(1.25f to 1.2f, AuxDisplayProfilePolicy.marginCropScale(onPanel))
         assertEquals(1f to 1f, AuxDisplayProfilePolicy.marginCropScale(AuxDisplayProfilePolicy.profileFor(1280, 720, 213)))
+    }
+
+    @Test
+    fun `content insets are shares of the panel height`() {
+        val insets = AuxDisplayProfilePolicy.contentInsets(720, topPercent = 20, bottomPercent = 10)
+        assertEquals(AuxDisplayProfilePolicy.ContentInsets(144, 72), insets)
+        assertEquals(AuxDisplayProfilePolicy.ContentInsets(96, 48), AuxDisplayProfilePolicy.contentInsets(480, 20, 10))
+    }
+
+    @Test
+    fun `content insets never claim the whole panel and are empty by default`() {
+        assertEquals(AuxDisplayProfilePolicy.ContentInsets(324, 0), AuxDisplayProfilePolicy.contentInsets(720, 90, -5))
+        assertTrue(AuxDisplayProfilePolicy.contentInsets(720, 0, 0).isEmpty)
     }
 }

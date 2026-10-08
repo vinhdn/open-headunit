@@ -315,6 +315,12 @@
     <string name="aux_display_hint">Asks Android Auto for a second picture for an instrument cluster or passenger screen. Needs Google Maps on the phone, and applies at the next connection.</string>
     <string name="aux_android_display">Display for the second screen</string>
     <string name="aux_android_display_none">No other display is attached</string>
+    <string name="aux_density">Second screen UI size</string>
+    <string name="aux_density_auto">Automatic (the panel\'s density)</string>
+    <string name="taplo_card_text">Taplo guidance card text size</string>
+    <string name="aux_inset_top">Covered at the top</string>
+    <string name="aux_inset_bottom">Covered at the bottom</string>
+    <string name="aux_inset_none">Nothing</string>
     <string name="aux_output_taplo_app">Taplo app (Android Auto Navi)</string>
     <string name="aux_output_taplo_app_hint">Install Android Auto Navi and choose it as the taplo map in the launcher. It shows the second screen on the instrument cluster, and asks for a phone when none is connected.</string>
     <string name="aux_android_display_auto">Automatic (first presentation display)</string>

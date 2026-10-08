@@ -4698,6 +4698,54 @@ class SettingsFragment : Fragment() {
      * Offered only where there is somewhere to put it: a head unit with one panel has nothing this
      * row could do, and a control that changes nothing is worse than none.
      */
+    /** One second-screen choice from a fixed list, saved as soon as it is picked. */
+    private fun addAuxChoiceRow(
+        items: MutableList<SettingItem>, id: String, nameRes: Int, choices: List<Int>, current: Int,
+        label: (Int) -> String, save: (Int) -> Unit,
+    ) {
+        val labels = choices.map(label)
+        val selected = choices.indexOf(current).takeIf { it >= 0 } ?: 0
+        items.add(SettingItem.SettingEntry(
+            stableId = id,
+            nameResId = nameRes,
+            value = labels[selected],
+            onClick = { _ ->
+                MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+                    .setTitle(nameRes)
+                    .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
+                        save(choices[which])
+                        settings.commit()
+                        dialog.dismiss()
+                        updateSettingsList()
+                    }
+                    .show()
+            }
+        ))
+    }
+
+    /** How much of the second screen is covered at one edge; announced from the next session. */
+    private fun addAuxInsetRow(items: MutableList<SettingItem>, id: String, nameRes: Int, current: Int, save: (Int) -> Unit) {
+        val choices = (0..AuxDisplayProfilePolicy.MAX_INSET_PERCENT).toList()
+        val labels = choices.map { if (it == 0) getString(R.string.aux_inset_none) else "$it%" }
+        val selected = choices.indexOf(current).takeIf { it >= 0 } ?: 0
+        items.add(SettingItem.SettingEntry(
+            stableId = id,
+            nameResId = nameRes,
+            value = labels[selected],
+            onClick = { _ ->
+                MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+                    .setTitle(nameRes)
+                    .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
+                        save(choices[which])
+                        settings.commit()
+                        dialog.dismiss()
+                        updateSettingsList()
+                    }
+                    .show()
+            }
+        ))
+    }
+
     /** Which Android display carries the second screen, among those attached besides the projection's. */
     private fun addAuxAndroidDisplayRow(items: MutableList<SettingItem>) {
         val projectionDisplayId = DisplayTargets.choose(requireContext(), settings).displayId
@@ -4909,6 +4957,23 @@ class SettingsFragment : Fragment() {
             SecondScreenOutputPolicy.Output.TAPLO_APP -> items.add(SettingItem.InfoBanner(
                 stableId = "auxTaploAppHint", textResId = R.string.aux_output_taplo_app_hint))
             else -> {}
+        }
+
+        addAuxChoiceRow(items, "auxDensity", R.string.aux_density, listOf(0, 120, 160, 200, 240, 280, 320),
+            settings.auxDensityDpi, { if (it == 0) getString(R.string.aux_density_auto) else "$it dpi" }) {
+            settings.auxDensityDpi = it
+        }
+        if (settings.auxOutput == SecondScreenOutputPolicy.Output.TAPLO_APP) {
+            addAuxChoiceRow(items, "taploCardText", R.string.taplo_card_text, listOf(80, 100, 125, 150, 175, 200),
+                settings.taploCardTextPercent, { "$it%" }) {
+                settings.taploCardTextPercent = it
+            }
+        }
+        addAuxInsetRow(items, "auxInsetTop", R.string.aux_inset_top, settings.auxInsetTopPercent) {
+            settings.auxInsetTopPercent = it
+        }
+        addAuxInsetRow(items, "auxInsetBottom", R.string.aux_inset_bottom, settings.auxInsetBottomPercent) {
+            settings.auxInsetBottomPercent = it
         }
 
         val roleLabels = arrayOf(

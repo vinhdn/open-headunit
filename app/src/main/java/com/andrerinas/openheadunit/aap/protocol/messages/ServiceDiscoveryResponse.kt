@@ -23,7 +23,9 @@ import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
 import com.andrerinas.openheadunit.secondscreen.SecondScreenHub
 import com.andrerinas.openheadunit.utils.HeadUnitScreenConfig
 import com.andrerinas.openheadunit.aap.AudioSessionConfig
+import com.google.protobuf.ByteString
 import com.google.protobuf.Message
+import com.google.protobuf.UnknownFieldSet
 
 internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSessionConfig)
     : AapMessage(Channel.ID_CTR, Control.ControlMsgType.MESSAGE_SERVICE_DISCOVERY_RESPONSE_VALUE, makeProto(context, audioConfig)) {
@@ -37,11 +39,19 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
          */
         private fun auxVideoService(context: Context, settings: Settings): Control.Service? {
             val panel = SecondScreenHub.announce(context, settings) ?: return null
-            val profile = AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, panel.densityDpi)
+            // A chosen density replaces the panel's, which is how Android Auto's UI there is sized.
+            val densityDpi = settings.auxDensityDpi.takeIf { it > 0 } ?: panel.densityDpi
+            val profile = AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, densityDpi)
             val role = settings.auxDisplayRole
             val keycode = if (AuxDisplayProfilePolicy.announcesContent(role)) {
                 AuxDisplayProfilePolicy.contentKeycodeOrDefault(settings.auxDisplayContent)
             } else null
+            val insets = AuxDisplayProfilePolicy.contentInsets(
+                panel.heightPx, settings.auxInsetTopPercent, settings.auxInsetBottomPercent)
+            if (!insets.isEmpty) {
+                AppLog.i("[ServiceDiscovery] The auxiliary display is covered ${insets.top}px at the top and " +
+                    "${insets.bottom}px at the bottom, announced as content insets")
+            }
             AppLog.i("[ServiceDiscovery] Announcing an auxiliary display on ${Channel.name(Channel.ID_VID2)}: " +
                 "${settings.auxOutput} ${panel.widthPx}x${panel.heightPx} as ${profile.resolution}, margins " +
                 "${profile.widthMargin}x${profile.heightMargin}, density ${profile.density}, " +
@@ -64,9 +74,30 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
                         setMarginWidth(profile.widthMargin)
                         setMarginHeight(profile.heightMargin)
                         setVideoCodecType(Media.MediaCodecType.MEDIA_CODEC_VIDEO_H264_BP)
+                        if (!insets.isEmpty) unknownFields = uiConfigWithContentInsets(insets)
                     }.build())
                 }.build()
             }.build()
+        }
+
+        /**
+         * VideoConfiguration.ui_config (11), carrying UiConfig.content_insets (2) and
+         * stable_content_insets (3) as Insets top (1) and bottom (2). Written as unknown fields, so
+         * the generated protos stay as they are.
+         */
+        private fun uiConfigWithContentInsets(insets: AuxDisplayProfilePolicy.ContentInsets): UnknownFieldSet {
+            fun varint(value: Int) = UnknownFieldSet.Field.newBuilder().addVarint(value.toLong()).build()
+            fun message(bytes: ByteString) = UnknownFieldSet.Field.newBuilder().addLengthDelimited(bytes).build()
+            val contentInsets = UnknownFieldSet.newBuilder()
+                .addField(1, varint(insets.top))
+                .addField(2, varint(insets.bottom))
+                .build()
+            // The same as stable_content_insets (3), which is what the map lays its camera out from.
+            val uiConfig = UnknownFieldSet.newBuilder()
+                .addField(2, message(contentInsets.toByteString()))
+                .addField(3, message(contentInsets.toByteString()))
+                .build()
+            return UnknownFieldSet.newBuilder().addField(11, message(uiConfig.toByteString())).build()
         }
 
         private fun makeProto(context: Context, audioConfig: AudioSessionConfig): Message {
