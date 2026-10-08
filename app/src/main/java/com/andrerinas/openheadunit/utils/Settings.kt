@@ -1084,6 +1084,15 @@ class Settings(private val context: Context) {
         get() = prefs.getInt("aux-density-dpi", 0)
         set(value) { prefs.edit().putInt("aux-density-dpi", value).apply() }
 
+    /**
+     * How much of the second screen's width Android Auto keeps free on the right, in percent: the car,
+     * the turn card and the arrival bar move left by it, and the strip is left to the cluster's own
+     * panels. 0 leaves the phone's own placement, with the car far to the right on a wide panel.
+     */
+    var auxCameraRightPercent: Int
+        get() = prefs.getInt("aux-camera-right-percent", 0)
+        set(value) { prefs.edit().putInt("aux-camera-right-percent", value).apply() }
+
     /** Text size of the guidance card the taplo app draws, in percent of its normal size. */
     var taploCardTextPercent: Int
         get() = prefs.getInt("taplo-card-text-percent", 100)

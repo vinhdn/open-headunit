@@ -4975,6 +4975,9 @@ class SettingsFragment : Fragment() {
         addAuxInsetRow(items, "auxInsetBottom", R.string.aux_inset_bottom, settings.auxInsetBottomPercent) {
             settings.auxInsetBottomPercent = it
         }
+        addAuxInsetRow(items, "auxCameraRight", R.string.aux_camera_right, settings.auxCameraRightPercent) {
+            settings.auxCameraRightPercent = it
+        }
 
         val roleLabels = arrayOf(
             getString(R.string.aux_display_role_auxiliary),

@@ -321,6 +321,7 @@
     <string name="aux_inset_top">Covered at the top</string>
     <string name="aux_inset_bottom">Covered at the bottom</string>
     <string name="aux_inset_none">Nothing</string>
+    <string name="aux_camera_right">Keep the right side free (moves the car and cards left)</string>
     <string name="aux_output_taplo_app">Taplo app (Android Auto Navi)</string>
     <string name="aux_output_taplo_app_hint">Install Android Auto Navi and choose it as the taplo map in the launcher. It shows the second screen on the instrument cluster, and asks for a phone when none is connected.</string>
     <string name="aux_android_display_auto">Automatic (first presentation display)</string>

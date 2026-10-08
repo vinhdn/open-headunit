@@ -41,20 +41,33 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
             val panel = SecondScreenHub.announce(context, settings) ?: return null
             // A chosen density replaces the panel's, which is how Android Auto's UI there is sized.
             val densityDpi = settings.auxDensityDpi.takeIf { it > 0 } ?: panel.densityDpi
-            val profile = AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, densityDpi)
+            val profile = AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, densityDpi,
+                squeezeWide = AuxDisplayProfilePolicy.squeezesWidePanels(settings.auxOutput))
             val role = settings.auxDisplayRole
             val keycode = if (AuxDisplayProfilePolicy.announcesContent(role)) {
                 AuxDisplayProfilePolicy.contentKeycodeOrDefault(settings.auxDisplayContent)
             } else null
-            val insets = AuxDisplayProfilePolicy.contentInsets(
-                panel.heightPx, settings.auxInsetTopPercent, settings.auxInsetBottomPercent)
-            if (!insets.isEmpty) {
+            // Two sets: the UI (turn card, arrival bar) keeps out of the covered part and the height
+            // margin, which is cropped off; the map camera only out of the covered part. Giving the
+            // camera the margin too leaves it a strip so wide that it moves the car to the right.
+            // Measured in the frame rows that reach the panel: the panel's own height with a margin,
+            // the whole frame when it is squeezed onto the panel.
+            // The right inset is in both: the phone places the car from the UI's insets, not the
+            // camera's, so keeping the right free moves the car and the cards left together.
+            val right = AuxDisplayProfilePolicy.rightInset(profile.pictureWidthPx, settings.auxCameraRightPercent)
+            val insets = AuxDisplayProfilePolicy.contentInsets(profile.pictureHeightPx, settings.auxInsetTopPercent,
+                settings.auxInsetBottomPercent, heightMarginPx = profile.heightMargin).copy(right = right)
+            val stableInsets = AuxDisplayProfilePolicy.contentInsets(profile.pictureHeightPx, settings.auxInsetTopPercent,
+                settings.auxInsetBottomPercent).copy(right = right)
+            if (!insets.isEmpty || !stableInsets.isEmpty) {
                 AppLog.i("[ServiceDiscovery] The auxiliary display is covered ${insets.top}px at the top and " +
-                    "${insets.bottom}px at the bottom, announced as content insets")
+                    "${insets.bottom}px at the bottom (with the ${profile.heightMargin}px height margin) for the UI, " +
+                    "${stableInsets.top}/${stableInsets.bottom}px for the map camera, ${right}px kept free on the right")
             }
             AppLog.i("[ServiceDiscovery] Announcing an auxiliary display on ${Channel.name(Channel.ID_VID2)}: " +
                 "${settings.auxOutput} ${panel.widthPx}x${panel.heightPx} as ${profile.resolution}, margins " +
-                "${profile.widthMargin}x${profile.heightMargin}, density ${profile.density}, " +
+                "${profile.widthMargin}x${profile.heightMargin}, pixel aspect ${profile.pixelAspectRatioE4}, " +
+                "density ${profile.density}, " +
                 "role=$role, content ${keycode ?: "the phone's choice"}")
             return Control.Service.newBuilder().also { service ->
                 service.id = Channel.ID_VID2
@@ -70,11 +83,13 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
                         codecResolution = profile.resolution
                         frameRate = profile.frameRate
                         setDensity(profile.density)
-                        setPixelAspectRatioE4(10000)
+                        setPixelAspectRatioE4(profile.pixelAspectRatioE4)
                         setMarginWidth(profile.widthMargin)
                         setMarginHeight(profile.heightMargin)
                         setVideoCodecType(Media.MediaCodecType.MEDIA_CODEC_VIDEO_H264_BP)
-                        if (!insets.isEmpty) unknownFields = uiConfigWithContentInsets(insets)
+                        if (!insets.isEmpty || !stableInsets.isEmpty) {
+                            unknownFields = uiConfigWithContentInsets(insets, stableInsets)
+                        }
                     }.build())
                 }.build()
             }.build()
@@ -83,19 +98,25 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
         /**
          * VideoConfiguration.ui_config (11), carrying UiConfig.content_insets (2) and
          * stable_content_insets (3) as Insets top (1) and bottom (2). Written as unknown fields, so
-         * the generated protos stay as they are.
+         * the generated protos stay as they are. [content] is what the UI keeps out of, [stable]
+         * what the map lays its camera (the car marker) out from.
          */
-        private fun uiConfigWithContentInsets(insets: AuxDisplayProfilePolicy.ContentInsets): UnknownFieldSet {
+        private fun uiConfigWithContentInsets(
+            content: AuxDisplayProfilePolicy.ContentInsets,
+            stable: AuxDisplayProfilePolicy.ContentInsets,
+        ): UnknownFieldSet {
             fun varint(value: Int) = UnknownFieldSet.Field.newBuilder().addVarint(value.toLong()).build()
             fun message(bytes: ByteString) = UnknownFieldSet.Field.newBuilder().addLengthDelimited(bytes).build()
-            val contentInsets = UnknownFieldSet.newBuilder()
-                .addField(1, varint(insets.top))
-                .addField(2, varint(insets.bottom))
+            // Insets: top (1), bottom (2), left (3), right (4).
+            fun insets(value: AuxDisplayProfilePolicy.ContentInsets) = UnknownFieldSet.newBuilder()
+                .addField(1, varint(value.top))
+                .addField(2, varint(value.bottom))
+                .apply { if (value.left > 0) addField(3, varint(value.left)) }
+                .apply { if (value.right > 0) addField(4, varint(value.right)) }
                 .build()
-            // The same as stable_content_insets (3), which is what the map lays its camera out from.
             val uiConfig = UnknownFieldSet.newBuilder()
-                .addField(2, message(contentInsets.toByteString()))
-                .addField(3, message(contentInsets.toByteString()))
+                .addField(2, message(insets(content).toByteString()))
+                .addField(3, message(insets(stable).toByteString()))
                 .build()
             return UnknownFieldSet.newBuilder().addField(11, message(uiConfig.toByteString())).build()
         }

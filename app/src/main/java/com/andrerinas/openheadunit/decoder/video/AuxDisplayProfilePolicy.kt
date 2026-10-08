@@ -1,6 +1,7 @@
 package com.andrerinas.openheadunit.decoder.video
 
 import com.andrerinas.openheadunit.aap.protocol.proto.Control
+import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
 
 private typealias Resolution = Control.Service.MediaSinkService.VideoConfiguration.VideoCodecResolutionType
 private typealias FrameRate = Control.Service.MediaSinkService.VideoConfiguration.VideoFrameRateType
@@ -49,7 +50,20 @@ object AuxDisplayProfilePolicy {
         val heightMargin: Int,
         val density: Int,
         val frameRate: FrameRate,
-    )
+        /**
+         * Width over height of one frame pixel as the panel shows it, x 10000; 10000 is square. Above
+         * that the frame is squeezed vertically onto the panel, which the phone draws ahead of.
+         */
+        val pixelAspectRatioE4: Int = 10000,
+    ) {
+        /** The columns of the frame that end up on the panel. */
+        val pictureWidthPx: Int
+            get() = ((dimensions(resolution)?.first ?: 0) - widthMargin).coerceAtLeast(0)
+
+        /** The rows of the frame that end up on the panel, which is what insets are measured in. */
+        val pictureHeightPx: Int
+            get() = ((dimensions(resolution)?.second ?: 0) - heightMargin).coerceAtLeast(0)
+    }
 
     /**
      * The smallest standard resolution that contains the panel, with the remainder as margins.
@@ -58,9 +72,10 @@ object AuxDisplayProfilePolicy {
      * the panel rather than the other way round; a panel larger than anything on offer takes the
      * largest and no margin, and is scaled.
      */
-    fun profileFor(widthPx: Int, heightPx: Int, densityDpi: Int): Profile {
+    fun profileFor(widthPx: Int, heightPx: Int, densityDpi: Int, squeezeWide: Boolean = false): Profile {
         val panelW = widthPx.coerceAtLeast(1)
         val panelH = heightPx.coerceAtLeast(1)
+        if (squeezeWide) squeezed(panelW, panelH, densityDpi)?.let { return it }
         val containing = SIZES
             .filter { it.second.first >= panelW && it.second.second >= panelH }
             .minByOrNull { it.second.first.toLong() * it.second.second }
@@ -77,6 +92,42 @@ object AuxDisplayProfilePolicy {
             frameRate = FrameRate._30,
         )
     }
+
+    /**
+     * A panel wider than 16:9 (a 1920x720 cluster) as a whole 16:9 frame of its width, squeezed to its
+     * height, rather than that frame with the rest as a height margin.
+     *
+     * The phone centres the map's camera on the whole frame, margin included, so with a margin the
+     * car sits on the rows that are cropped away and shows at the very bottom of the panel. Squeezed,
+     * every row of the frame is on the panel, and the pixel aspect ratio has the phone draw it
+     * stretched ahead so it shows undistorted. Null for a panel that is not wider than 16:9.
+     */
+    private fun squeezed(panelW: Int, panelH: Int, densityDpi: Int): Profile? {
+        if (panelW.toLong() * 9 <= panelH.toLong() * 16) return null
+        val wide = SIZES.filter { (_, size) -> size.first > size.second && size.first * 9 == size.second * 16 }
+        val chosen = wide.filter { it.second.first >= panelW }.minByOrNull { it.second.first }
+            ?: wide.maxByOrNull { it.second.first } ?: return null
+        val (frameW, frameH) = chosen.second
+        // (panel px per frame px across) / (panel px per frame px down)
+        val par = (10000L * panelW * frameH / (frameW.toLong() * panelH)).toInt()
+        return Profile(
+            resolution = chosen.first,
+            widthMargin = 0,
+            heightMargin = 0,
+            density = if (densityDpi in 1..640) densityDpi else 160,
+            frameRate = FrameRate._30,
+            pixelAspectRatioE4 = par,
+        )
+    }
+
+    /**
+     * Whether an output squeezes a wide panel's frame (see [squeezed]): only those that scale the
+     * decoded picture onto a view do. A network receiver, a USB display or the MS912x crop the frame
+     * from its top-left and need the margin layout.
+     */
+    fun squeezesWidePanels(output: SecondScreenOutputPolicy.Output): Boolean =
+        output == SecondScreenOutputPolicy.Output.ANDROID_DISPLAY ||
+            output == SecondScreenOutputPolicy.Output.TAPLO_APP
 
     /**
      * What the second sink is announced as. AUXILIARY honours our content choice; CLUSTER gets
@@ -105,20 +156,34 @@ object AuxDisplayProfilePolicy {
     const val TAPLO_INSET_BOTTOM_PERCENT = 8
 
     /** Pixels Android Auto should keep its own UI out of, at the top and bottom of the panel. */
-    data class ContentInsets(val top: Int, val bottom: Int) {
-        val isEmpty: Boolean get() = top == 0 && bottom == 0
+    data class ContentInsets(val top: Int, val bottom: Int, val left: Int = 0, val right: Int = 0) {
+        val isEmpty: Boolean get() = top == 0 && bottom == 0 && left == 0 && right == 0
     }
+
+    /**
+     * Pixels of the frame to keep free on the right. On a wide panel the phone lays its map out as on
+     * a landscape head unit, with the car at about four fifths of the width, so the car sits far to
+     * the right; an inset there moves the car, and the turn card and arrival bar with it, towards
+     * the middle, and leaves that strip to whatever the cluster draws itself. Measured on a
+     * 1920x720 taplo: none puts the car at x 1540, 28% at x 1137, about 38% at the centre.
+     */
+    fun rightInset(pictureWidthPx: Int, percent: Int): Int =
+        pictureWidthPx.coerceAtLeast(0) * percent.coerceIn(0, MAX_INSET_PERCENT) / 100
 
     /**
      * The part of the panel that is covered (a bezel, a gauge, an overlay drawn over the picture),
      * as content insets: unlike margins the phone still draws there, but it moves its turn card,
-     * its arrival bar and the car marker into what is left. Measured on the panel, not the
-     * announced frame, since margins are already outside it.
+     * its arrival bar and the car marker into what is left.
+     *
+     * Android Auto lays its second screen out over the whole announced frame and does not keep its
+     * UI out of the margins, so a height margin (1920x720 goes out as 1920x1080, 360 below) would
+     * swallow the arrival bar it draws at the bottom. The margin is therefore added to the bottom
+     * inset: the bar lands just above the covered part of the panel.
      */
-    fun contentInsets(panelHeightPx: Int, topPercent: Int, bottomPercent: Int): ContentInsets {
+    fun contentInsets(panelHeightPx: Int, topPercent: Int, bottomPercent: Int, heightMarginPx: Int = 0): ContentInsets {
         val height = panelHeightPx.coerceAtLeast(0)
         fun share(percent: Int) = height * percent.coerceIn(0, MAX_INSET_PERCENT) / 100
-        return ContentInsets(share(topPercent), share(bottomPercent))
+        return ContentInsets(share(topPercent), share(bottomPercent) + heightMarginPx.coerceAtLeast(0))
     }
 
     /** Whether a stored content choice is one the protocol allows on an auxiliary display. */

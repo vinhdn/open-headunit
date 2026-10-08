@@ -1,7 +1,9 @@
 package com.andrerinas.openheadunit.decoder.video
 
 import com.andrerinas.openheadunit.aap.protocol.proto.Control
+import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -96,6 +98,14 @@ class AuxDisplayProfilePolicyTest {
     }
 
     @Test
+    fun `the height margin is added to the bottom inset, so the arrival bar stays on the panel`() {
+        val profile = AuxDisplayProfilePolicy.profileFor(1920, 720, 160)
+        assertEquals(360, profile.heightMargin)
+        val insets = AuxDisplayProfilePolicy.contentInsets(720, 15, 8, heightMarginPx = profile.heightMargin)
+        assertEquals(AuxDisplayProfilePolicy.ContentInsets(108, 57 + 360), insets)
+    }
+
+    @Test
     fun `content insets are shares of the panel height`() {
         val insets = AuxDisplayProfilePolicy.contentInsets(720, topPercent = 20, bottomPercent = 10)
         assertEquals(AuxDisplayProfilePolicy.ContentInsets(144, 72), insets)
@@ -106,5 +116,36 @@ class AuxDisplayProfilePolicyTest {
     fun `content insets never claim the whole panel and are empty by default`() {
         assertEquals(AuxDisplayProfilePolicy.ContentInsets(324, 0), AuxDisplayProfilePolicy.contentInsets(720, 90, -5))
         assertTrue(AuxDisplayProfilePolicy.contentInsets(720, 0, 0).isEmpty)
+    }
+
+    @Test
+    fun `a panel wider than 16 by 9 is squeezed onto a whole 16 by 9 frame`() {
+        val profile = AuxDisplayProfilePolicy.profileFor(1920, 720, 160, squeezeWide = true)
+        assertEquals(AuxDisplayProfilePolicy.Profile(
+            resolution = Resolution._1920x1080, widthMargin = 0, heightMargin = 0, density = 160,
+            frameRate = Control.Service.MediaSinkService.VideoConfiguration.VideoFrameRateType._30,
+            pixelAspectRatioE4 = 15000,
+        ), profile)
+        assertEquals(1080, profile.pictureHeightPx)
+        assertEquals(1f to 1f, AuxDisplayProfilePolicy.marginCropScale(profile))
+    }
+
+    @Test
+    fun `squeezing leaves panels up to 16 by 9 and the cropping outputs on margins`() {
+        assertEquals(10000, AuxDisplayProfilePolicy.profileFor(800, 480, 160, squeezeWide = true).pixelAspectRatioE4)
+        assertEquals(10000, AuxDisplayProfilePolicy.profileFor(1280, 720, 160, squeezeWide = true).pixelAspectRatioE4)
+        val cropped = AuxDisplayProfilePolicy.profileFor(1920, 720, 160)
+        assertEquals(360, cropped.heightMargin)
+        assertEquals(720, cropped.pictureHeightPx)
+        assertTrue(AuxDisplayProfilePolicy.squeezesWidePanels(SecondScreenOutputPolicy.Output.TAPLO_APP))
+        assertFalse(AuxDisplayProfilePolicy.squeezesWidePanels(SecondScreenOutputPolicy.Output.MS912X))
+    }
+
+    @Test
+    fun `the right inset is a share of the frame width, capped`() {
+        assertEquals(537, AuxDisplayProfilePolicy.rightInset(1920, 28))
+        assertEquals(0, AuxDisplayProfilePolicy.rightInset(1920, 0))
+        assertEquals(864, AuxDisplayProfilePolicy.rightInset(1920, 90))
+        assertTrue(AuxDisplayProfilePolicy.ContentInsets(0, 0, right = 0).isEmpty)
     }
 }
