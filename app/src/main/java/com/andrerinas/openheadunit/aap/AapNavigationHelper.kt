@@ -68,6 +68,22 @@ class AapNavigationHelper(
     @Suppress("DEPRECATION") // Single bridge: legacy nextEventType/turnSide → NavigationUpdateIntent
     fun sendFullNavigationBroadcast(snapshot: NavigationSnapshot, navEventType: Int) {
         val prepared = prepareFullNavigationMessage(snapshot, navEventType)
+        if (navEventType == AapNavigation.NAV_EVENT_TYPE_STOP) {
+            NavigationFeed.clear()
+        } else {
+            NavigationFeed.publish(NavigationFeed.Guidance(
+                road = prepared.road,
+                action = prepared.actionText,
+                event = prepared.nextEventType,
+                side = prepared.turnSide,
+                roundaboutExit = prepared.turnNumber,
+                distanceMeters = prepared.distanceMeters,
+                timeSeconds = prepared.timeSeconds,
+                totalDistanceMeters = prepared.totalDistanceMeters,
+                totalTimeSeconds = prepared.totalTimeSeconds,
+                estimatedArrival = prepared.estimatedArrival,
+            ))
+        }
         val intent = NavigationUpdateIntent(
             distanceMeters = prepared.distanceMeters,
             timeSeconds = prepared.timeSeconds,

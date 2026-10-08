@@ -43,6 +43,10 @@ class TaploActivity : Activity() {
     private lateinit var statusPanel: View
     private lateinit var statusTitle: TextView
     private lateinit var statusText: TextView
+    private lateinit var navCard: NavCardView
+    private var lastNav: Bundle? = null
+    private var insetTopPercent = 0
+    private var insetBottomPercent = 0
 
     private var surface: Surface? = null
 
@@ -59,7 +63,10 @@ class TaploActivity : Activity() {
 
     private val incoming = Messenger(object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
-            if (msg.what == TaploLink.MSG_STATE) onState(msg.data ?: return)
+            when (msg.what) {
+                TaploLink.MSG_STATE -> onState(msg.data ?: return)
+                TaploLink.MSG_NAV -> onNav(msg.data ?: return)
+            }
         }
     })
 
@@ -76,6 +83,7 @@ class TaploActivity : Activity() {
         override fun onServiceDisconnected(name: ComponentName?) {
             service = null
             connected = false
+            showNav()
             render()
         }
     }
@@ -161,10 +169,18 @@ class TaploActivity : Activity() {
             addView(statusTitle)
             addView(statusText)
         }
+        navCard = NavCardView(this)
         return FrameLayout(this).apply {
             setBackgroundColor(Color.BLACK)
             addView(picture, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            addView(navCard, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.END))
             addView(statusPanel, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            // The card sits in the part of the panel that is not covered, so it follows the size.
+            // Width too: the road line's maximum width is a share of it.
+            addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+                if (bottom - top != oldBottom - oldTop || right - left != oldRight - oldLeft) placeNavCard()
+            }
         }
     }
 
@@ -176,7 +192,12 @@ class TaploActivity : Activity() {
         secondScreen = state.getBoolean(TaploLink.KEY_SECOND_SCREEN)
         cropX = state.getFloat(TaploLink.KEY_CROP_X, 1f)
         cropY = state.getFloat(TaploLink.KEY_CROP_Y, 1f)
+        insetTopPercent = state.getInt(TaploLink.KEY_INSET_TOP_PERCENT, 0)
+        insetBottomPercent = state.getInt(TaploLink.KEY_INSET_BOTTOM_PERCENT, 0)
+        navCard.setTextPercent(state.getInt(TaploLink.KEY_CARD_TEXT_PERCENT, 100))
         applyCrop()
+        placeNavCard()
+        showNav()
         // The head unit only takes the surface while it is set to this app, so offer it again.
         if (secondScreen && wasSelected == false) sendSurface(force = true)
         render()
@@ -201,6 +222,29 @@ class TaploActivity : Activity() {
         statusTitle.setText(title)
         statusText.setText(text)
         statusPanel.visibility = View.VISIBLE
+    }
+
+    private fun onNav(nav: Bundle) {
+        lastNav = nav
+        showNav()
+    }
+
+    /** Guidance only means something while a session is up; a stale card would mislead. */
+    private fun showNav() {
+        val nav = lastNav
+        if (nav == null || !connected) navCard.visibility = View.GONE else navCard.update(nav)
+    }
+
+    /** Below the covered top and clear of the right edge, where Android Auto's own cards are not. */
+    private fun placeNavCard() {
+        val height = (navCard.parent as? View)?.height ?: return
+        val margin = dp(12)
+        (navCard.layoutParams as FrameLayout.LayoutParams).apply {
+            topMargin = height * insetTopPercent / 100 + margin
+            rightMargin = margin
+            navCard.layoutParams = this
+        }
+        navCard.maxWidthHint(((navCard.parent as View).width * 0.42f).toInt())
     }
 
     /** Android Auto draws the panel's size at the top-left of a larger frame; this crops the rest off. */

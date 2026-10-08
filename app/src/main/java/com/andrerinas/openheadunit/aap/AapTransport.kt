@@ -768,6 +768,7 @@ class AapTransport(
         auxVideoLane?.release()
         SecondScreenHub.close()
         AuxDisplayHost.dismissForSession()
+        NavigationFeed.clear()
         auxVideoLane = null
 
         aapRead = null
