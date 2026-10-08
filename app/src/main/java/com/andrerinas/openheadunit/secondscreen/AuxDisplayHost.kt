@@ -80,7 +80,7 @@ object AuxDisplayHost {
         // The size announced for this panel says how much margin each frame carries.
         val panel = SecondScreenHub.announcedTarget
         val (scaleX, scaleY) = if (panel == null) 1f to 1f else AuxDisplayProfilePolicy.marginCropScale(
-            AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, panel.densityDpi)
+            AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, panel.densityDpi, squeezeWide = true)
         )
         val decoder = App.provide(context).requireAuxVideoDecoder()
         val createPicture = { host: Context ->

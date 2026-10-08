@@ -140,7 +140,7 @@ class TaploLinkService : Service() {
         val settings = App.provide(this).settings
         val target = settings.taploAppLastTarget
         val (cropX, cropY) = AuxDisplayProfilePolicy.marginCropScale(
-            AuxDisplayProfilePolicy.profileFor(target.widthPx, target.heightPx, target.densityDpi)
+            AuxDisplayProfilePolicy.profileFor(target.widthPx, target.heightPx, target.densityDpi, squeezeWide = true)
         )
         val session = when (App.provide(this).commManager.connectionState.value) {
             is CommManager.ConnectionState.TransportStarted -> TaploLink.SESSION_CONNECTED
