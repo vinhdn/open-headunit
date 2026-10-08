@@ -9,4 +9,6 @@
     <string name="state_no_head_unit_text">This app shows the second screen of the Android Auto app, which has to be installed and signed with the same key.</string>
     <string name="state_waiting_title">Waiting for navigation</string>
     <string name="state_waiting_text">The picture appears as soon as the phone sends it.</string>
+    <string name="nav_minutes">%1$d min</string>
+    <string name="nav_hours_minutes">%1$d h %2$d min</string>
 </resources>

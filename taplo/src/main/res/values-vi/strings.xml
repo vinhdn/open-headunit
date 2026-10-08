@@ -8,4 +8,6 @@
     <string name="state_no_head_unit_text">Ứng dụng này hiển thị màn hình phụ của ứng dụng Android Auto, ứng dụng đó cần được cài và ký cùng một khóa.</string>
     <string name="state_waiting_title">Đang chờ dẫn đường</string>
     <string name="state_waiting_text">Hình sẽ hiện ngay khi điện thoại gửi sang.</string>
+    <string name="nav_minutes">%1$d phút</string>
+    <string name="nav_hours_minutes">%1$d giờ %2$d phút</string>
 </resources>

@@ -859,6 +859,7 @@ class AapTransport(
             cleanupStep("auxiliary video") { auxVideoLane?.release() }
             cleanupStep("second screen") { SecondScreenHub.close() }
             cleanupStep("second screen window") { AuxDisplayHost.dismissForSession() }
+            NavigationFeed.clear()
             auxVideoLane = null
             videoBufferPool.clear()
             videoBacklog.set(0)

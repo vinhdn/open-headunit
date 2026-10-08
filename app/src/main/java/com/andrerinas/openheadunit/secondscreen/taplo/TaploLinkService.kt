@@ -2,6 +2,7 @@ package com.andrerinas.openheadunit.secondscreen.taplo
 
 import android.app.Service
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -11,6 +12,7 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.view.Surface
 import com.andrerinas.openheadunit.App
+import com.andrerinas.openheadunit.aap.NavigationFeed
 import com.andrerinas.openheadunit.connection.CommManager
 import com.andrerinas.openheadunit.contract.TaploLink
 import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
@@ -37,14 +39,28 @@ class TaploLinkService : Service() {
     private var surface: Surface? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
+    // What the clients are told depends on these, so a change in Settings reaches them at once.
+    private val watchedKeys = setOf("aux-display-enabled", "aux-output", "aux-inset-top-percent",
+        "aux-inset-bottom-percent", "taplo-card-text-percent")
+    private val settingsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key in watchedKeys) pushState()
+    }
+    private var settingsPrefs: SharedPreferences? = null
+
     private val messenger = Messenger(object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) = handle(msg)
     })
 
     override fun onCreate() {
         super.onCreate()
+        settingsPrefs = getSharedPreferences("settings", MODE_PRIVATE).also {
+            it.registerOnSharedPreferenceChangeListener(settingsListener)
+        }
         scope.launch {
             App.provide(this@TaploLinkService).commManager.connectionState.collect { pushState() }
+        }
+        scope.launch {
+            NavigationFeed.current.collect { pushNav() }
         }
     }
 
@@ -57,6 +73,7 @@ class TaploLinkService : Service() {
     }
 
     override fun onDestroy() {
+        settingsPrefs?.unregisterOnSharedPreferenceChangeListener(settingsListener)
         scope.cancel()
         release("the taplo link closed")
         super.onDestroy()
@@ -67,6 +84,7 @@ class TaploLinkService : Service() {
             TaploLink.MSG_REGISTER -> msg.replyTo?.let { client ->
                 clients += client
                 send(client, state())
+                send(client, nav(), TaploLink.MSG_NAV)
             }
             TaploLink.MSG_UNREGISTER -> msg.replyTo?.let { clients -= it }
             TaploLink.MSG_SURFACE -> {
@@ -124,14 +142,45 @@ class TaploLinkService : Service() {
         val (cropX, cropY) = AuxDisplayProfilePolicy.marginCropScale(
             AuxDisplayProfilePolicy.profileFor(target.widthPx, target.heightPx, target.densityDpi)
         )
+        val session = when (App.provide(this).commManager.connectionState.value) {
+            is CommManager.ConnectionState.TransportStarted -> TaploLink.SESSION_CONNECTED
+            is CommManager.ConnectionState.Disconnected, is CommManager.ConnectionState.Error -> TaploLink.SESSION_DISCONNECTED
+            else -> TaploLink.SESSION_CONNECTING
+        }
         return Bundle().apply {
-            putBoolean(TaploLink.KEY_CONNECTED,
-                App.provide(this@TaploLinkService).commManager.connectionState.value is
-                    CommManager.ConnectionState.TransportStarted)
+            putBoolean(TaploLink.KEY_CONNECTED, session == TaploLink.SESSION_CONNECTED)
+            putString(TaploLink.KEY_SESSION, session)
+            putInt(TaploLink.KEY_CARD_TEXT_PERCENT, settings.taploCardTextPercent)
             putBoolean(TaploLink.KEY_SECOND_SCREEN, isSelected())
             putFloat(TaploLink.KEY_CROP_X, cropX)
             putFloat(TaploLink.KEY_CROP_Y, cropY)
+            putInt(TaploLink.KEY_INSET_TOP_PERCENT, settings.auxInsetTopPercent)
+            putInt(TaploLink.KEY_INSET_BOTTOM_PERCENT, settings.auxInsetBottomPercent)
         }
+    }
+
+    private fun nav(): Bundle {
+        val guidance = NavigationFeed.current.value
+        return Bundle().apply {
+            putBoolean(TaploLink.KEY_NAV_ACTIVE, guidance != null)
+            guidance ?: return@apply
+            putString(TaploLink.KEY_NAV_ROAD, guidance.road)
+            putString(TaploLink.KEY_NAV_ACTION, guidance.action)
+            putInt(TaploLink.KEY_NAV_EVENT, guidance.event)
+            guidance.side?.let { putInt(TaploLink.KEY_NAV_SIDE, it) }
+            guidance.roundaboutExit?.let { putInt(TaploLink.KEY_NAV_ROUNDABOUT_EXIT, it) }
+            guidance.distanceMeters?.let { putInt(TaploLink.KEY_NAV_DISTANCE_M, it) }
+            guidance.timeSeconds?.let { putInt(TaploLink.KEY_NAV_TIME_S, it) }
+            guidance.totalDistanceMeters?.let { putInt(TaploLink.KEY_NAV_TOTAL_DISTANCE_M, it) }
+            guidance.totalTimeSeconds?.let { putLong(TaploLink.KEY_NAV_TOTAL_TIME_S, it) }
+            guidance.estimatedArrival?.let { putString(TaploLink.KEY_NAV_ETA, it) }
+        }
+    }
+
+    private fun pushNav() {
+        if (clients.isEmpty()) return
+        val nav = nav()
+        clients.toList().forEach { send(it, nav, TaploLink.MSG_NAV) }
     }
 
     private fun pushState() {
@@ -140,9 +189,9 @@ class TaploLinkService : Service() {
         clients.toList().forEach { send(it, state) }
     }
 
-    private fun send(client: Messenger, state: Bundle) {
+    private fun send(client: Messenger, payload: Bundle, what: Int = TaploLink.MSG_STATE) {
         try {
-            client.send(Message.obtain(null, TaploLink.MSG_STATE).apply { data = Bundle(state) })
+            client.send(Message.obtain(null, what).apply { data = Bundle(payload) })
         } catch (e: RemoteException) {
             clients -= client
         }
