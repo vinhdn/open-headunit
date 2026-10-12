@@ -113,6 +113,17 @@ android {
         buildConfigField("String", "AVAILABLE_LOCALES", "\"${availableLocales.joinToString(",")}\"")
         buildConfigField("String", "GIT_SHA", "\"$gitDescription\"")
 
+        // Second screen defaults, overridden per flavor (x7). A stored setting always wins; these
+        // only decide what a unit that has never changed them gets. -1 for an inset means "by
+        // output": the taplo app output's own cover, nothing for the others.
+        buildConfigField("boolean", "AUX_DEFAULT_ENABLED", "false")
+        buildConfigField("String", "AUX_DEFAULT_OUTPUT", "\"ANDROID_DISPLAY\"")
+        buildConfigField("String", "AUX_DEFAULT_PICTURE", "\"fill\"")
+        buildConfigField("int", "AUX_DEFAULT_DENSITY_DPI", "0")
+        buildConfigField("int", "AUX_DEFAULT_INSET_TOP_PERCENT", "-1")
+        buildConfigField("int", "AUX_DEFAULT_INSET_BOTTOM_PERCENT", "-1")
+        buildConfigField("int", "AUX_DEFAULT_RIGHT_PERCENT", "0")
+
         externalNativeBuild {
             cmake {
                 cppFlags("")
@@ -135,12 +146,30 @@ android {
         create("system") {
             dimension = "distribution"
         }
+        // The github build set up for the BAIC X7 and its x7_taplo cluster app: the second screen on,
+        // sent to the taplo app as a centred 3:2 picture, sized and covered for that cluster. Signed
+        // with the platform key; only the release runs as android.uid.system, so the debug build
+        // installs over the platform-signed builds on a test phone.
+        create("x7") {
+            dimension = "distribution"
+            buildConfigField("boolean", "AUX_DEFAULT_ENABLED", "true")
+            buildConfigField("String", "AUX_DEFAULT_OUTPUT", "\"TAPLO_APP\"")
+            buildConfigField("String", "AUX_DEFAULT_PICTURE", "\"3:2\"")
+            buildConfigField("int", "AUX_DEFAULT_DENSITY_DPI", "200")
+            buildConfigField("int", "AUX_DEFAULT_INSET_TOP_PERCENT", "20")
+            buildConfigField("int", "AUX_DEFAULT_INSET_BOTTOM_PERCENT", "10")
+            buildConfigField("int", "AUX_DEFAULT_RIGHT_PERCENT", "30")
+        }
     }
 
     // The system flavor is the github build with a different manifest, so it takes github's code
     // (the VPN that Self Mode needs) and github's strings rather than keeping a copy of either.
     sourceSets {
         getByName("system") {
+            java.srcDir("src/github/java")
+            res.srcDir("src/github/res")
+        }
+        getByName("x7") {
             java.srcDir("src/github/java")
             res.srcDir("src/github/res")
         }
@@ -259,15 +288,20 @@ android {
 // and a head unit already carries a system build of this package, over which Android refuses a
 // lower versionCode, so platform.properties may raise it (versionCode=...).
 androidComponents {
-    onVariants(selector().withFlavor("distribution" to "system")) { variant ->
-        if (platformSigning == null) {
-            logger.warn("${variant.name}: no platform.properties, so this build will not install as a system app")
-            return@onVariants
-        }
-        variant.signingConfig?.setConfig(android.signingConfigs.getByName("platform"))
-        platformSigning.getProperty("versionCode")?.toIntOrNull()?.let { code ->
-            variant.outputs.forEach { it.versionCode.set(code) }
-        }
+    onVariants(selector().withFlavor("distribution" to "system")) { variant -> platformSign(variant) }
+    onVariants(selector().withFlavor("distribution" to "x7")) { variant -> platformSign(variant) }
+}
+
+/** The system and x7 flavors, debug and release alike, carry the platform key. */
+fun platformSign(variant: com.android.build.api.variant.ApplicationVariant) {
+    val props = platformSigning
+    if (props == null) {
+        logger.warn("${variant.name}: no platform.properties, so this build will not install as a system app")
+        return
+    }
+    variant.signingConfig.setConfig(android.signingConfigs.getByName("platform"))
+    props.getProperty("versionCode")?.toIntOrNull()?.let { code ->
+        variant.outputs.forEach { it.versionCode.set(code) }
     }
 }
 
@@ -276,6 +310,7 @@ dependencies {
     "playstoreImplementation"("org.conscrypt:conscrypt-android:2.6.1")
     "githubImplementation"("org.conscrypt:conscrypt-android:2.5.3")
     "systemImplementation"("org.conscrypt:conscrypt-android:2.5.3")
+    "x7Implementation"("org.conscrypt:conscrypt-android:2.5.3")
 
     implementation("com.google.protobuf:protobuf-java:3.25.5")
     implementation("androidx.activity:activity-ktx:1.8.2")

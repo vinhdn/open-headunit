@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The x7 flavor: the github build for the BAIC X7 and x7_taplo. Code and resources are the github
+     flavor's; this manifest repeats its VPN service, since a flavor has one manifest. The release
+     adds sharedUserId in src/x7Release; the debug stays an ordinary app for test phones. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <service
+            android:name=".aap.DummyVpnService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

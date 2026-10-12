@@ -15,6 +15,7 @@ import com.andrerinas.openheadunit.view.PerformanceOverlayField
 import com.andrerinas.openheadunit.view.PerformanceOverlayPolicy
 import com.andrerinas.openheadunit.decoder.video.VideoFaultInjector
 import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
+import com.andrerinas.openheadunit.secondscreen.SecondScreenDefaults
 import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
 import com.andrerinas.openheadunit.secondscreen.network.NetworkStreamPolicy
 import com.andrerinas.openheadunit.secondscreen.ms912x.Ms912xMode
@@ -1068,12 +1069,12 @@ class Settings(private val context: Context) {
      * before this sent.
      */
     var auxDisplayEnabled: Boolean
-        get() = prefs.getBoolean("aux-display-enabled", false)
+        get() = prefs.getBoolean("aux-display-enabled", SecondScreenDefaults.enabled)
         set(value) { prefs.edit().putBoolean("aux-display-enabled", value).apply() }
 
     /** Where the second stream goes: an Android display, the network, or a USB adapter. */
     var auxOutput: SecondScreenOutputPolicy.Output
-        get() = SecondScreenOutputPolicy.Output.of(prefs.getString("aux-output", null))
+        get() = SecondScreenOutputPolicy.Output.of(prefs.getString("aux-output", null) ?: SecondScreenDefaults.output)
         set(value) { prefs.edit().putString("aux-output", value.name).apply() }
 
     /** Which of [SecondScreenOutputPolicy.NETWORK_SIZES] a network receiver is sent. */
@@ -1120,13 +1121,13 @@ class Settings(private val context: Context) {
      * in the part that can be seen.
      */
     var auxInsetTopPercent: Int
-        get() = prefs.getInt("aux-inset-top-percent",
-            if (auxOutput == SecondScreenOutputPolicy.Output.TAPLO_APP) AuxDisplayProfilePolicy.TAPLO_INSET_TOP_PERCENT else 0)
+        get() = prefs.getInt("aux-inset-top-percent", SecondScreenDefaults.insetTopPercent
+            ?: if (auxOutput == SecondScreenOutputPolicy.Output.TAPLO_APP) AuxDisplayProfilePolicy.TAPLO_INSET_TOP_PERCENT else 0)
         set(value) { prefs.edit().putInt("aux-inset-top-percent", value).apply() }
 
     var auxInsetBottomPercent: Int
-        get() = prefs.getInt("aux-inset-bottom-percent",
-            if (auxOutput == SecondScreenOutputPolicy.Output.TAPLO_APP) AuxDisplayProfilePolicy.TAPLO_INSET_BOTTOM_PERCENT else 0)
+        get() = prefs.getInt("aux-inset-bottom-percent", SecondScreenDefaults.insetBottomPercent
+            ?: if (auxOutput == SecondScreenOutputPolicy.Output.TAPLO_APP) AuxDisplayProfilePolicy.TAPLO_INSET_BOTTOM_PERCENT else 0)
         set(value) { prefs.edit().putInt("aux-inset-bottom-percent", value).apply() }
 
     /**
@@ -1135,7 +1136,7 @@ class Settings(private val context: Context) {
      * of the map around them.
      */
     var auxDensityDpi: Int
-        get() = prefs.getInt("aux-density-dpi", 0)
+        get() = prefs.getInt("aux-density-dpi", SecondScreenDefaults.densityDpi)
         set(value) { prefs.edit().putInt("aux-density-dpi", value).apply() }
 
     /**
@@ -1144,7 +1145,7 @@ class Settings(private val context: Context) {
      * panels. 0 leaves the phone's own placement, with the car far to the right on a wide panel.
      */
     var auxCameraRightPercent: Int
-        get() = prefs.getInt("aux-camera-right-percent", 0)
+        get() = prefs.getInt("aux-camera-right-percent", SecondScreenDefaults.rightPercent)
         set(value) { prefs.edit().putInt("aux-camera-right-percent", value).apply() }
 
     /**
@@ -1153,7 +1154,7 @@ class Settings(private val context: Context) {
      * fit and centred. See AuxPictureShape.
      */
     var auxPictureShape: String
-        get() = prefs.getString("aux-picture-shape", null) ?: "fill"
+        get() = prefs.getString("aux-picture-shape", null) ?: SecondScreenDefaults.picture
         set(value) { prefs.edit().putString("aux-picture-shape", value).apply() }
 
     /** Text size of the guidance card the taplo app draws, in percent of its normal size. */
