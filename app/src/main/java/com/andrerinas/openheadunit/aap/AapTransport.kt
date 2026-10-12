@@ -1018,7 +1018,8 @@ class AapTransport(
             AapVideo(App.provide(context).requireAuxVideoDecoder(), settings, onFrameCorrupted = onCorrupted,
                 requestedCodec = { VideoDecoder.CodecType.H264.settingsValue })
         } else {
-            AapVideo(null, settings, { buf, off, len -> SecondScreenHub.encoded()?.onAccessUnit(buf, off, len) }, onCorrupted)
+            AapVideo(null, settings, onAccessUnit = { buf, off, len -> SecondScreenHub.encoded()?.onAccessUnit(buf, off, len) },
+                onFrameCorrupted = onCorrupted)
         }
         val lane = VideoLane(Channel.ID_VID2, video, "AapTransport:Handler::VideoAux", ::getSessionId) { channel, session ->
             sendMediaAck(channel, session)

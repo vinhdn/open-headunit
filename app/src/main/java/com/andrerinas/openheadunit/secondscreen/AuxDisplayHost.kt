@@ -32,9 +32,12 @@ import com.andrerinas.openheadunit.view.AuxPictureView
  */
 object AuxDisplayHost {
 
-    private val main = Handler(Looper.getMainLooper())
+    // Lazy, so a transport quitting without a second screen (or in a JVM test) never needs a Looper.
+    private val main by lazy { Handler(Looper.getMainLooper()) }
 
+    @Volatile
     private var presentation: AuxDisplayPresentation? = null
+    @Volatile
     private var overlay: AuxPictureView? = null
     private var overlayManager: WindowManager? = null
 
@@ -50,6 +53,7 @@ object AuxDisplayHost {
 
     /** Closes whatever is up as the session ends; the next session announces and opens afresh. */
     fun dismissForSession() {
+        if (overlay == null && presentation == null) return
         main.post { dismiss("the session ended") }
     }
 

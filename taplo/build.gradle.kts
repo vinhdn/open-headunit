@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -76,9 +76,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        (this as KotlinJvmOptions).jvmTarget = "1.8"
-    }
 }
 
 // The system flavor, debug and release alike, is signed with the platform key.
@@ -94,4 +91,10 @@ androidComponents {
 
 dependencies {
     implementation(project(":contract"))
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
 }
