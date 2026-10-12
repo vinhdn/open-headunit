@@ -63,6 +63,14 @@ object TaploLink {
     /** The head unit is set to send the second screen to this app, so a picture will come. */
     const val KEY_SECOND_SCREEN = "second_screen"
 
+    /**
+     * Width over height of the picture, or 0 when it fills the view. Above 0 the client draws it as
+     * the largest rectangle of that shape centred in its view, black around it, and applies
+     * [KEY_CROP_X]/[KEY_CROP_Y] inside that rectangle. Keep reporting the whole view's size in
+     * [MSG_SURFACE]: the head unit works the picture out from it.
+     */
+    const val KEY_PICTURE_ASPECT = "picture_aspect"
+
     /** How far to enlarge the picture from its top-left so the margin Android Auto leaves falls off. */
     const val KEY_CROP_X = "crop_x"
     const val KEY_CROP_Y = "crop_y"

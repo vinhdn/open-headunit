@@ -120,7 +120,7 @@ class AuxDisplayProfilePolicyTest {
 
     @Test
     fun `a panel wider than 16 by 9 is squeezed onto a whole 16 by 9 frame`() {
-        val profile = AuxDisplayProfilePolicy.profileFor(1920, 720, 160, squeezeWide = true)
+        val profile = AuxDisplayProfilePolicy.profileFor(1920, 720, 160, squeezeToFrame = true)
         assertEquals(AuxDisplayProfilePolicy.Profile(
             resolution = Resolution._1920x1080, widthMargin = 0, heightMargin = 0, density = 160,
             frameRate = Control.Service.MediaSinkService.VideoConfiguration.VideoFrameRateType._30,
@@ -132,13 +132,13 @@ class AuxDisplayProfilePolicyTest {
 
     @Test
     fun `squeezing leaves panels up to 16 by 9 and the cropping outputs on margins`() {
-        assertEquals(10000, AuxDisplayProfilePolicy.profileFor(800, 480, 160, squeezeWide = true).pixelAspectRatioE4)
-        assertEquals(10000, AuxDisplayProfilePolicy.profileFor(1280, 720, 160, squeezeWide = true).pixelAspectRatioE4)
+        assertEquals(10000, AuxDisplayProfilePolicy.profileFor(800, 480, 160, squeezeToFrame = true).pixelAspectRatioE4)
+        assertEquals(10000, AuxDisplayProfilePolicy.profileFor(1280, 720, 160, squeezeToFrame = true).pixelAspectRatioE4)
         val cropped = AuxDisplayProfilePolicy.profileFor(1920, 720, 160)
         assertEquals(360, cropped.heightMargin)
         assertEquals(720, cropped.pictureHeightPx)
-        assertTrue(AuxDisplayProfilePolicy.squeezesWidePanels(SecondScreenOutputPolicy.Output.TAPLO_APP))
-        assertFalse(AuxDisplayProfilePolicy.squeezesWidePanels(SecondScreenOutputPolicy.Output.MS912X))
+        assertTrue(AuxDisplayProfilePolicy.squeezesToFrame(SecondScreenOutputPolicy.Output.TAPLO_APP))
+        assertFalse(AuxDisplayProfilePolicy.squeezesToFrame(SecondScreenOutputPolicy.Output.MS912X))
     }
 
     @Test

@@ -60,6 +60,9 @@ class TaploActivity : Activity() {
     private var stateKnown = false
     private var cropX = 1f
     private var cropY = 1f
+    /** Width over height of the picture, 0 when it fills the window; see [TaploLink.KEY_PICTURE_ASPECT]. */
+    private var pictureAspect = 0f
+    private lateinit var root: FrameLayout
 
     private val incoming = Messenger(object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -170,7 +173,8 @@ class TaploActivity : Activity() {
             addView(statusText)
         }
         navCard = NavCardView(this)
-        return FrameLayout(this).apply {
+        root = FrameLayout(this)
+        return root.apply {
             setBackgroundColor(Color.BLACK)
             addView(picture, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             addView(navCard, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -179,7 +183,10 @@ class TaploActivity : Activity() {
             // The card sits in the part of the panel that is not covered, so it follows the size.
             // Width too: the road line's maximum width is a share of it.
             addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-                if (bottom - top != oldBottom - oldTop || right - left != oldRight - oldLeft) placeNavCard()
+                if (bottom - top != oldBottom - oldTop || right - left != oldRight - oldLeft) {
+                    placeNavCard()
+                    layoutPicture()
+                }
             }
         }
     }
@@ -192,6 +199,11 @@ class TaploActivity : Activity() {
         secondScreen = state.getBoolean(TaploLink.KEY_SECOND_SCREEN)
         cropX = state.getFloat(TaploLink.KEY_CROP_X, 1f)
         cropY = state.getFloat(TaploLink.KEY_CROP_Y, 1f)
+        val aspect = state.getFloat(TaploLink.KEY_PICTURE_ASPECT, 0f)
+        if (aspect != pictureAspect) {
+            pictureAspect = aspect
+            layoutPicture()
+        }
         insetTopPercent = state.getInt(TaploLink.KEY_INSET_TOP_PERCENT, 0)
         insetBottomPercent = state.getInt(TaploLink.KEY_INSET_BOTTOM_PERCENT, 0)
         navCard.setTextPercent(state.getInt(TaploLink.KEY_CARD_TEXT_PERCENT, 100))
@@ -248,21 +260,45 @@ class TaploActivity : Activity() {
     }
 
     /** Android Auto draws the panel's size at the top-left of a larger frame; this crops the rest off. */
+    /**
+     * The picture as the largest rectangle of [pictureAspect] centred in the window, black around
+     * it; the whole window when the head unit sends no shape.
+     */
+    private fun layoutPicture() {
+        val w = root.width
+        val h = root.height
+        if (w <= 0 || h <= 0) return
+        val params = picture.layoutParams as FrameLayout.LayoutParams
+        val (pw, ph) = if (pictureAspect <= 0f) {
+            ViewGroup.LayoutParams.MATCH_PARENT to ViewGroup.LayoutParams.MATCH_PARENT
+        } else if (w.toFloat() / h > pictureAspect) {
+            (h * pictureAspect).toInt() / 2 * 2 to h
+        } else {
+            w to (w / pictureAspect).toInt() / 2 * 2
+        }
+        if (params.width == pw && params.height == ph) return
+        params.width = pw
+        params.height = ph
+        params.gravity = Gravity.CENTER
+        picture.layoutParams = params
+    }
+
     private fun applyCrop() {
         picture.setTransform(Matrix().apply { setScale(cropX, cropY, 0f, 0f) })
     }
 
     private fun sendSurface(force: Boolean = false) {
         val current = surface ?: return
-        if (service == null || picture.width <= 0 || picture.height <= 0) return
-        val handed = Triple(current, picture.width, picture.height)
+        // The whole window, not the picture: the head unit works out the picture's shape from it.
+        if (service == null || root.width <= 0 || root.height <= 0) return
+        val handed = Triple(current, root.width, root.height)
         if (!force && handed == sent) return
         sent = handed
         send(Message.obtain(null, TaploLink.MSG_SURFACE).apply {
             data = Bundle().apply {
                 putParcelable(TaploLink.KEY_SURFACE, current)
-                putInt(TaploLink.KEY_WIDTH, picture.width)
-                putInt(TaploLink.KEY_HEIGHT, picture.height)
+                putInt(TaploLink.KEY_WIDTH, root.width)
+                putInt(TaploLink.KEY_HEIGHT, root.height)
                 putInt(TaploLink.KEY_DENSITY_DPI, resources.displayMetrics.densityDpi)
             }
         })

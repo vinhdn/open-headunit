@@ -17,6 +17,7 @@ import com.andrerinas.openheadunit.connection.CommManager
 import com.andrerinas.openheadunit.contract.TaploLink
 import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
 import com.andrerinas.openheadunit.decoder.video.DecoderStopPolicy
+import com.andrerinas.openheadunit.secondscreen.SecondScreenHub
 import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
 import com.andrerinas.openheadunit.utils.AppLog
 import kotlinx.coroutines.CoroutineScope
@@ -41,7 +42,7 @@ class TaploLinkService : Service() {
 
     // What the clients are told depends on these, so a change in Settings reaches them at once.
     private val watchedKeys = setOf("aux-display-enabled", "aux-output", "aux-inset-top-percent",
-        "aux-inset-bottom-percent", "taplo-card-text-percent")
+        "aux-inset-bottom-percent", "taplo-card-text-percent", "aux-picture-shape")
     private val settingsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key in watchedKeys) pushState()
     }
@@ -139,9 +140,11 @@ class TaploLinkService : Service() {
     private fun state(): Bundle {
         val settings = App.provide(this).settings
         val target = settings.taploAppLastTarget
-        val (cropX, cropY) = AuxDisplayProfilePolicy.marginCropScale(
-            AuxDisplayProfilePolicy.profileFor(target.widthPx, target.heightPx, target.densityDpi, squeezeWide = true)
-        )
+        // The picture the phone was told about while a session runs; what the settings say before.
+        val plan = SecondScreenHub.announcedPlan.takeIf { SecondScreenHub.announced == SecondScreenOutputPolicy.Output.TAPLO_APP }
+            ?: AuxDisplayProfilePolicy.plan(target.widthPx, target.heightPx, target.densityDpi,
+                SecondScreenOutputPolicy.Output.TAPLO_APP, settings.auxPictureShape)
+        val (cropX, cropY) = AuxDisplayProfilePolicy.marginCropScale(plan.profile)
         val session = when (App.provide(this).commManager.connectionState.value) {
             is CommManager.ConnectionState.TransportStarted -> TaploLink.SESSION_CONNECTED
             is CommManager.ConnectionState.Disconnected, is CommManager.ConnectionState.Error -> TaploLink.SESSION_DISCONNECTED
@@ -152,6 +155,7 @@ class TaploLinkService : Service() {
             putString(TaploLink.KEY_SESSION, session)
             putInt(TaploLink.KEY_CARD_TEXT_PERCENT, settings.taploCardTextPercent)
             putBoolean(TaploLink.KEY_SECOND_SCREEN, isSelected())
+            putFloat(TaploLink.KEY_PICTURE_ASPECT, plan.shape.aspect())
             putFloat(TaploLink.KEY_CROP_X, cropX)
             putFloat(TaploLink.KEY_CROP_Y, cropY)
             putInt(TaploLink.KEY_INSET_TOP_PERCENT, settings.auxInsetTopPercent)

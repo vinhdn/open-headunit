@@ -72,10 +72,10 @@ object AuxDisplayProfilePolicy {
      * the panel rather than the other way round; a panel larger than anything on offer takes the
      * largest and no margin, and is scaled.
      */
-    fun profileFor(widthPx: Int, heightPx: Int, densityDpi: Int, squeezeWide: Boolean = false): Profile {
+    fun profileFor(widthPx: Int, heightPx: Int, densityDpi: Int, squeezeToFrame: Boolean = false): Profile {
         val panelW = widthPx.coerceAtLeast(1)
         val panelH = heightPx.coerceAtLeast(1)
-        if (squeezeWide) squeezed(panelW, panelH, densityDpi)?.let { return it }
+        if (squeezeToFrame) squeezed(panelW, panelH, densityDpi)?.let { return it }
         val containing = SIZES
             .filter { it.second.first >= panelW && it.second.second >= panelH }
             .minByOrNull { it.second.first.toLong() * it.second.second }
@@ -94,18 +94,22 @@ object AuxDisplayProfilePolicy {
     }
 
     /**
-     * A panel wider than 16:9 (a 1920x720 cluster) as a whole 16:9 frame of its width, squeezed to its
-     * height, rather than that frame with the rest as a height margin.
+     * A landscape panel that is not a standard resolution (a 1920x720 cluster, a 1080x720 3:2
+     * picture) as a whole 16:9 frame squeezed onto it, rather than that frame with the rest as a
+     * margin.
      *
-     * The phone centres the map's camera on the whole frame, margin included, so with a margin the
-     * car sits on the rows that are cropped away and shows at the very bottom of the panel. Squeezed,
-     * every row of the frame is on the panel, and the pixel aspect ratio has the phone draw it
-     * stretched ahead so it shows undistorted. Null for a panel that is not wider than 16:9.
+     * The phone lays its map and its UI out over the whole frame, margin included: with a height
+     * margin the car sat on the rows that are cropped away and showed at the very bottom, and a
+     * width margin moves the turn card off the panel the same way. Squeezed, every pixel of the
+     * frame is on the panel, and the pixel aspect ratio has the phone draw it stretched ahead so it
+     * shows undistorted. The frame is the smallest 16:9 one that covers the panel both ways, so no
+     * detail is lost. Null for a portrait panel or one that is a standard resolution already.
      */
     private fun squeezed(panelW: Int, panelH: Int, densityDpi: Int): Profile? {
-        if (panelW.toLong() * 9 <= panelH.toLong() * 16) return null
+        if (panelW < panelH) return null
+        if (SIZES.any { (_, size) -> size.first == panelW && size.second == panelH }) return null
         val wide = SIZES.filter { (_, size) -> size.first > size.second && size.first * 9 == size.second * 16 }
-        val chosen = wide.filter { it.second.first >= panelW }.minByOrNull { it.second.first }
+        val chosen = wide.filter { it.second.first >= panelW && it.second.second >= panelH }.minByOrNull { it.second.first }
             ?: wide.maxByOrNull { it.second.first } ?: return null
         val (frameW, frameH) = chosen.second
         // (panel px per frame px across) / (panel px per frame px down)
@@ -120,12 +124,35 @@ object AuxDisplayProfilePolicy {
         )
     }
 
+    /** Everything the second screen is announced as, and where its picture sits on the panel. */
+    data class Plan(
+        val shape: AuxPictureShape,
+        val announcedWidth: Int,
+        val announcedHeight: Int,
+        /** Where the picture sits on the panel; the rest stays black. */
+        val placement: AuxPictureShape.Rect,
+        val profile: Profile,
+    )
+
     /**
-     * Whether an output squeezes a wide panel's frame (see [squeezed]): only those that scale the
-     * decoded picture onto a view do. A network receiver, a USB display or the MS912x crop the frame
-     * from its top-left and need the margin layout.
+     * The one place a panel, an output and the chosen picture shape become what is announced, so the
+     * announcement, the window and the taplo link can never disagree about it. A shape other than
+     * the whole panel needs an output that scales the picture onto a view, so the others always
+     * fill.
      */
-    fun squeezesWidePanels(output: SecondScreenOutputPolicy.Output): Boolean =
+    fun plan(panelW: Int, panelH: Int, densityDpi: Int, output: SecondScreenOutputPolicy.Output, storedShape: String?): Plan {
+        val squeeze = squeezesToFrame(output)
+        val shape = if (squeeze) AuxPictureShape.of(storedShape) else AuxPictureShape.Fill
+        val (w, h) = shape.announcedSize(panelW, panelH)
+        return Plan(shape, w, h, shape.placement(panelW, panelH), profileFor(w, h, densityDpi, squeezeToFrame = squeeze))
+    }
+
+    /**
+     * Whether an output squeezes the frame onto the panel (see [squeezed]): only those that scale
+     * the decoded picture onto a view do. A network receiver, a USB display or the MS912x crop the
+     * frame from its top-left and need the margin layout.
+     */
+    fun squeezesToFrame(output: SecondScreenOutputPolicy.Output): Boolean =
         output == SecondScreenOutputPolicy.Output.ANDROID_DISPLAY ||
             output == SecondScreenOutputPolicy.Output.TAPLO_APP
 
@@ -184,6 +211,26 @@ object AuxDisplayProfilePolicy {
         val height = panelHeightPx.coerceAtLeast(0)
         fun share(percent: Int) = height * percent.coerceIn(0, MAX_INSET_PERCENT) / 100
         return ContentInsets(share(topPercent), share(bottomPercent) + heightMarginPx.coerceAtLeast(0))
+    }
+
+    /**
+     * Insets for a picture that sits [pictureTopPx] down a panel [panelHeightPx] tall and is
+     * [pictureHeightPx] tall there, in the [frameRows] of the frame that carry it: the covered top
+     * and bottom of the panel, as far as they reach into the picture. A centred picture shorter
+     * than the panel is clear of a cover that ends above it.
+     */
+    fun pictureInsets(
+        panelHeightPx: Int, pictureTopPx: Int, pictureHeightPx: Int, frameRows: Int,
+        topPercent: Int, bottomPercent: Int,
+    ): ContentInsets {
+        val panelH = panelHeightPx.coerceAtLeast(0)
+        val picH = pictureHeightPx.coerceIn(1, maxOf(1, panelH))
+        val picTop = pictureTopPx.coerceIn(0, panelH)
+        fun cover(percent: Int) = panelH * percent.coerceIn(0, MAX_INSET_PERCENT) / 100
+        val inTop = (cover(topPercent) - picTop).coerceIn(0, picH)
+        val inBottom = (cover(bottomPercent) - (panelH - picTop - picH)).coerceIn(0, picH)
+        fun rows(px: Int) = (px.toLong() * frameRows / picH).toInt()
+        return ContentInsets(rows(inTop), rows(inBottom))
     }
 
     /** Whether a stored content choice is one the protocol allows on an auxiliary display. */

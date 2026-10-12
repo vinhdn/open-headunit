@@ -14,6 +14,8 @@ internal class AuxDisplayPresentation(
     outerContext: Context,
     display: Display,
     private val createPicture: (Context) -> AuxPictureView,
+    /** Wraps the picture in what fills the panel (black around a centred picture). */
+    private val frame: (Context, AuxPictureView) -> android.view.View = { _, picture -> picture },
 ) : Presentation(outerContext, display) {
 
     private var picture: AuxPictureView? = null
@@ -23,7 +25,7 @@ internal class AuxDisplayPresentation(
         val view = createPicture(context)
         picture = view
         setContentView(
-            view,
+            frame(context, view),
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )
     }

@@ -1147,6 +1147,15 @@ class Settings(private val context: Context) {
         get() = prefs.getInt("aux-camera-right-percent", 0)
         set(value) { prefs.edit().putInt("aux-camera-right-percent", value).apply() }
 
+    /**
+     * What part of the second screen Android Auto draws: "fill" for all of it, an aspect ratio
+     * ("3:2") for the largest centred rectangle of that shape, or a resolution ("1280x720") scaled to
+     * fit and centred. See AuxPictureShape.
+     */
+    var auxPictureShape: String
+        get() = prefs.getString("aux-picture-shape", null) ?: "fill"
+        set(value) { prefs.edit().putString("aux-picture-shape", value).apply() }
+
     /** Text size of the guidance card the taplo app draws, in percent of its normal size. */
     var taploCardTextPercent: Int
         get() = prefs.getInt("taplo-card-text-percent", 100)

@@ -4,6 +4,7 @@ import android.content.Context
 import android.hardware.usb.UsbManager
 import android.os.Build
 import com.andrerinas.openheadunit.App
+import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
 import com.andrerinas.openheadunit.secondscreen.ms912x.Ms912xModes
 import com.andrerinas.openheadunit.secondscreen.ms912x.Ms912xOutput
 import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy.Output
@@ -44,11 +45,19 @@ object SecondScreenHub {
         private set
 
     /**
+     * What the last announcement told the phone, so a window or the taplo link lays out the picture
+     * that is actually coming even after the settings change mid-session. Null before one.
+     */
+    @Volatile
+    var announcedPlan: AuxDisplayProfilePolicy.Plan? = null
+
+    /**
      * The size to announce for the chosen output, recorded so the session opens that same output.
      * Called once per service discovery.
      */
     fun announce(context: Context, settings: Settings): Target? {
         announcedDisplayId = null
+        announcedPlan = null
         if (!settings.auxDisplayEnabled) {
             announced = null
             announcedTarget = null

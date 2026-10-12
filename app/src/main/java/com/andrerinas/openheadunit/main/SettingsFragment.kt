@@ -66,6 +66,7 @@ import com.andrerinas.openheadunit.utils.AppLog
 import com.andrerinas.openheadunit.utils.AppPermissions
 import com.andrerinas.openheadunit.utils.AppThemeManager
 import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
+import com.andrerinas.openheadunit.decoder.video.AuxPictureShape
 import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
 import com.andrerinas.openheadunit.connection.usb.UsbReceiver
 import com.andrerinas.openheadunit.secondscreen.SecondScreenHub
@@ -4793,6 +4794,12 @@ class SettingsFragment : Fragment() {
      * Offered only where there is somewhere to put it: a head unit with one panel has nothing this
      * row could do, and a control that changes nothing is worse than none.
      */
+    private fun auxPictureShapeLabel(shape: AuxPictureShape): String = when (shape) {
+        AuxPictureShape.Fill -> getString(R.string.aux_picture_fill)
+        is AuxPictureShape.Aspect -> getString(R.string.aux_picture_aspect, "${shape.width}:${shape.height}")
+        is AuxPictureShape.Size -> getString(R.string.aux_picture_size, "${shape.width}x${shape.height}")
+    }
+
     /** One second-screen choice from a fixed list, saved as soon as it is picked. */
     private fun addAuxChoiceRow(
         items: MutableList<SettingItem>, id: String, nameRes: Int, choices: List<Int>, current: Int,
@@ -5054,6 +5061,14 @@ class SettingsFragment : Fragment() {
             else -> {}
         }
 
+        if (AuxDisplayProfilePolicy.squeezesToFrame(settings.auxOutput)) {
+            val shapes = AuxPictureShape.CHOICES
+            val current = AuxPictureShape.of(settings.auxPictureShape)
+            addAuxChoiceRow(items, "auxPictureShape", R.string.aux_picture_shape, shapes.indices.toList(),
+                shapes.indexOf(current), { auxPictureShapeLabel(shapes[it]) }) {
+                settings.auxPictureShape = shapes[it].stored
+            }
+        }
         addAuxChoiceRow(items, "auxDensity", R.string.aux_density, listOf(0, 120, 160, 200, 240, 280, 320),
             settings.auxDensityDpi, { if (it == 0) getString(R.string.aux_density_auto) else "$it dpi" }) {
             settings.auxDensityDpi = it

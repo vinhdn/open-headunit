@@ -7,9 +7,15 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.Display
+import android.widget.FrameLayout
+import android.view.ViewGroup
+import android.view.View
+import android.view.Gravity
+import android.graphics.Color
 import android.view.WindowManager
 import com.andrerinas.openheadunit.App
 import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
+import com.andrerinas.openheadunit.decoder.video.AuxPictureShape
 import com.andrerinas.openheadunit.utils.AppLog
 import com.andrerinas.openheadunit.utils.AppPermissions
 import com.andrerinas.openheadunit.utils.DisplayTargets
@@ -40,6 +46,7 @@ object AuxDisplayHost {
     @Volatile
     private var overlay: AuxPictureView? = null
     private var overlayManager: WindowManager? = null
+    private var overlayRoot: View? = null
 
     private val isShowing: Boolean
         get() = overlay != null || presentation?.isShowing == true
@@ -81,21 +88,22 @@ object AuxDisplayHost {
             AppLog.w("AuxDisplayHost: no display is attached for the second screen")
             return
         }
-        // The size announced for this panel says how much margin each frame carries.
-        val panel = SecondScreenHub.announcedTarget
-        val (scaleX, scaleY) = if (panel == null) 1f to 1f else AuxDisplayProfilePolicy.marginCropScale(
-            AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, panel.densityDpi, squeezeWide = true)
-        )
+        // What was announced for this panel: how much margin each frame carries, and where the
+        // picture sits when it is not the whole panel.
+        val plan = SecondScreenHub.announcedPlan
+        val (scaleX, scaleY) = plan?.let { AuxDisplayProfilePolicy.marginCropScale(it.profile) } ?: (1f to 1f)
+        val placement = plan?.placement?.takeIf { plan.shape != AuxPictureShape.Fill }
         val decoder = App.provide(context).requireAuxVideoDecoder()
         val createPicture = { host: Context ->
             AuxPictureView(host, display.displayId, decoder, scaleX, scaleY, onSurfaceReady)
         }
+        val frame = { host: Context, picture: AuxPictureView -> centredFrame(host, picture, placement) }
         try {
             if (AppPermissions.isOverlayGranted(context)) {
-                showOverlay(context, display, createPicture)
+                showOverlay(context, display, createPicture, frame)
                 AppLog.i("AuxDisplayHost: the second screen is up on display ${display.displayId} as an overlay")
             } else if (context is Activity) {
-                val shown = AuxDisplayPresentation(context, display, createPicture)
+                val shown = AuxDisplayPresentation(context, display, createPicture, frame)
                 shown.show()
                 presentation = shown
                 AppLog.i("AuxDisplayHost: the second screen is up on display ${display.displayId} " +
@@ -115,7 +123,25 @@ object AuxDisplayHost {
         return DisplayTargets.auxDisplay(context, settings)?.let { DisplayTargets.display(context, it.displayId) }
     }
 
-    private fun showOverlay(context: Context, display: Display, createPicture: (Context) -> AuxPictureView) {
+    /**
+     * The picture inside a black frame the size of the panel: the whole of it, or centred at the
+     * announced shape's size when it is not the whole panel.
+     */
+    private fun centredFrame(host: Context, picture: AuxPictureView, placement: AuxPictureShape.Rect?): View =
+        FrameLayout(host).apply {
+            setBackgroundColor(Color.BLACK)
+            val params = if (placement == null) {
+                FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            } else {
+                FrameLayout.LayoutParams(placement.width, placement.height, Gravity.CENTER)
+            }
+            addView(picture, params)
+        }
+
+    private fun showOverlay(
+        context: Context, display: Display, createPicture: (Context) -> AuxPictureView,
+        frame: (Context, AuxPictureView) -> View,
+    ) {
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -142,18 +168,21 @@ object AuxDisplayHost {
             PixelFormat.OPAQUE,
         ).apply { title = "OpenHeadunit second screen" }
         val view = createPicture(host)
-        manager.addView(view, params)
+        val root = frame(host, view)
+        manager.addView(root, params)
         overlay = view
+        overlayRoot = root
         overlayManager = manager
     }
 
     private fun dismiss(reason: String) {
         overlay?.let { view ->
             view.release(reason)
-            try { overlayManager?.removeView(view) } catch (_: Exception) {}
+            try { overlayManager?.removeView(overlayRoot ?: view) } catch (_: Exception) {}
             AppLog.i("AuxDisplayHost: the second screen overlay is closed because $reason")
         }
         overlay = null
+        overlayRoot = null
         overlayManager = null
         presentation?.let { shown -> try { shown.dismiss() } catch (_: Exception) {} }
         presentation = null

@@ -41,8 +41,16 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
             val panel = SecondScreenHub.announce(context, settings) ?: return null
             // A chosen density replaces the panel's, which is how Android Auto's UI there is sized.
             val densityDpi = settings.auxDensityDpi.takeIf { it > 0 } ?: panel.densityDpi
-            val profile = AuxDisplayProfilePolicy.profileFor(panel.widthPx, panel.heightPx, densityDpi,
-                squeezeWide = AuxDisplayProfilePolicy.squeezesWidePanels(settings.auxOutput))
+            // The chosen shape is what the phone is told the display is; the rest of the panel stays
+            // black. Only outputs that scale the picture onto a view can centre it.
+            val plan = AuxDisplayProfilePolicy.plan(panel.widthPx, panel.heightPx, densityDpi, settings.auxOutput,
+                settings.auxPictureShape)
+            SecondScreenHub.announcedPlan = plan
+            val shape = plan.shape
+            val announcedW = plan.announcedWidth
+            val announcedH = plan.announcedHeight
+            val placement = plan.placement
+            val profile = plan.profile
             val role = settings.auxDisplayRole
             val keycode = if (AuxDisplayProfilePolicy.announcesContent(role)) {
                 AuxDisplayProfilePolicy.contentKeycodeOrDefault(settings.auxDisplayContent)
@@ -55,17 +63,20 @@ internal class ServiceDiscoveryResponse(context: Context, audioConfig: AudioSess
             // The right inset is in both: the phone places the car from the UI's insets, not the
             // camera's, so keeping the right free moves the car and the cards left together.
             val right = AuxDisplayProfilePolicy.rightInset(profile.pictureWidthPx, settings.auxCameraRightPercent)
-            val insets = AuxDisplayProfilePolicy.contentInsets(profile.pictureHeightPx, settings.auxInsetTopPercent,
-                settings.auxInsetBottomPercent, heightMarginPx = profile.heightMargin).copy(right = right)
-            val stableInsets = AuxDisplayProfilePolicy.contentInsets(profile.pictureHeightPx, settings.auxInsetTopPercent,
-                settings.auxInsetBottomPercent).copy(right = right)
+            // The covered parts are on the panel; a centred picture only shares the part of them that
+            // reaches into it.
+            val covered = AuxDisplayProfilePolicy.pictureInsets(panel.heightPx, placement.top, placement.height,
+                profile.pictureHeightPx, settings.auxInsetTopPercent, settings.auxInsetBottomPercent)
+            val insets = covered.copy(bottom = covered.bottom + profile.heightMargin, right = right)
+            val stableInsets = covered.copy(right = right)
             if (!insets.isEmpty || !stableInsets.isEmpty) {
                 AppLog.i("[ServiceDiscovery] The auxiliary display is covered ${insets.top}px at the top and " +
                     "${insets.bottom}px at the bottom (with the ${profile.heightMargin}px height margin) for the UI, " +
                     "${stableInsets.top}/${stableInsets.bottom}px for the map camera, ${right}px kept free on the right")
             }
             AppLog.i("[ServiceDiscovery] Announcing an auxiliary display on ${Channel.name(Channel.ID_VID2)}: " +
-                "${settings.auxOutput} ${panel.widthPx}x${panel.heightPx} as ${profile.resolution}, margins " +
+                "${settings.auxOutput} ${panel.widthPx}x${panel.heightPx}, picture ${shape.stored} " +
+                "${announcedW}x$announcedH at ${placement.left},${placement.top} as ${profile.resolution}, margins " +
                 "${profile.widthMargin}x${profile.heightMargin}, pixel aspect ${profile.pixelAspectRatioE4}, " +
                 "density ${profile.density}, " +
                 "role=$role, content ${keycode ?: "the phone's choice"}")
