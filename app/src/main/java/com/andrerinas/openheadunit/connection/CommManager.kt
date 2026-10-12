@@ -1395,6 +1395,17 @@ class CommManager(
         _transport?.requestAuxKeyframe(reason)
     }
 
+    /**
+     * Applies second-screen settings now. They go to the phone in service discovery and cannot be
+     * renegotiated, so the session ends and a settings restart brings it back on the saved route,
+     * without reporting a link failure.
+     */
+    fun restartForSecondScreen(): Unit = synchronized(transportLifecycleLock) {
+        if (_connectionState.value !is ConnectionState.TransportStarted) return@synchronized
+        AppLog.i("CommManager: second screen settings changed; reconnecting the projection session")
+        disconnect(isUserExit = false, honorKillOnDisconnect = false, reason = DisconnectReason.SETTINGS_RESTART)
+    }
+
     fun updateAudioGains() {
         _transport?.aapAudio?.updateGains()
     }

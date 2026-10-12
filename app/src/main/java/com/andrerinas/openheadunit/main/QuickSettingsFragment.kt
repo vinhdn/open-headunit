@@ -13,6 +13,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.andrerinas.openheadunit.App
 import com.andrerinas.openheadunit.R
 import com.andrerinas.openheadunit.aap.AapService
+import com.andrerinas.openheadunit.secondscreen.SecondScreenOutputPolicy
+import com.andrerinas.openheadunit.decoder.video.AuxPictureShape
+import com.andrerinas.openheadunit.decoder.video.AuxDisplayProfilePolicy
 import com.andrerinas.openheadunit.main.settings.SettingItem
 import com.andrerinas.openheadunit.main.settings.SettingsAdapter
 import com.andrerinas.openheadunit.utils.Settings
@@ -196,6 +199,8 @@ class QuickSettingsFragment : DialogFragment() {
         ))
 
         // --- System & Safety ---
+        addSecondScreenItems(items)
+
         items.add(SettingItem.CategoryHeader("system", R.string.category_automation))
 
         items.add(SettingItem.ToggleSettingEntry(
@@ -239,6 +244,83 @@ class QuickSettingsFragment : DialogFragment() {
         ))
 
         settingsAdapter.submitList(items)
+    }
+
+    /**
+     * The second screen's layout, while it is on. It goes to the phone when the session starts, so a
+     * change shows from the next connection, or at once with Reconnect now.
+     */
+    private fun addSecondScreenItems(items: MutableList<SettingItem>) {
+        if (!settings.auxDisplayEnabled) return
+        items.add(SettingItem.CategoryHeader("secondScreen", R.string.aux_display))
+        if (AuxDisplayProfilePolicy.squeezesToFrame(settings.auxOutput)) {
+            val shapes = AuxPictureShape.CHOICES
+            addChoice(items, "qsAuxPicture", R.string.aux_picture_shape, shapes.indices.toList(),
+                shapes.indexOf(AuxPictureShape.of(settings.auxPictureShape)), { shapeLabel(shapes[it]) }) {
+                settings.auxPictureShape = shapes[it].stored
+            }
+        }
+        addChoice(items, "qsAuxDensity", R.string.aux_density, listOf(0, 120, 160, 200, 240, 280, 320),
+            settings.auxDensityDpi, { if (it == 0) getString(R.string.aux_density_auto) else "$it dpi" }) {
+            settings.auxDensityDpi = it
+        }
+        val percents = (0..AuxDisplayProfilePolicy.MAX_INSET_PERCENT).toList()
+        val percentLabel = { p: Int -> if (p == 0) getString(R.string.aux_inset_none) else "$p%" }
+        addChoice(items, "qsAuxTop", R.string.aux_inset_top, percents, settings.auxInsetTopPercent, percentLabel) {
+            settings.auxInsetTopPercent = it
+        }
+        addChoice(items, "qsAuxBottom", R.string.aux_inset_bottom, percents, settings.auxInsetBottomPercent, percentLabel) {
+            settings.auxInsetBottomPercent = it
+        }
+        addChoice(items, "qsAuxRight", R.string.aux_camera_right, percents, settings.auxCameraRightPercent, percentLabel) {
+            settings.auxCameraRightPercent = it
+        }
+        if (settings.auxOutput == SecondScreenOutputPolicy.Output.TAPLO_APP) {
+            addChoice(items, "qsTaploCardText", R.string.taplo_card_text, listOf(80, 100, 125, 150, 175, 200),
+                settings.taploCardTextPercent, { "$it%" }) {
+                settings.taploCardTextPercent = it
+            }
+        }
+        items.add(SettingItem.InfoBanner(stableId = "qsAuxHint", textResId = R.string.aux_apply_next_connection))
+        items.add(SettingItem.ActionButton(
+            stableId = "qsAuxReconnect",
+            textResId = R.string.aux_reconnect_now,
+            onClick = {
+                dismiss()
+                App.provide(requireContext()).commManager.restartForSecondScreen()
+            }
+        ))
+    }
+
+    private fun shapeLabel(shape: AuxPictureShape): String = when (shape) {
+        AuxPictureShape.Fill -> getString(R.string.aux_picture_fill)
+        is AuxPictureShape.Aspect -> getString(R.string.aux_picture_aspect, "${shape.width}:${shape.height}")
+        is AuxPictureShape.Size -> getString(R.string.aux_picture_size, "${shape.width}x${shape.height}")
+    }
+
+    /** One choice from a fixed list, saved as soon as it is picked. */
+    private fun addChoice(
+        items: MutableList<SettingItem>, id: String, nameRes: Int, choices: List<Int>, current: Int,
+        label: (Int) -> String, save: (Int) -> Unit,
+    ) {
+        val labels = choices.map(label)
+        val selected = choices.indexOf(current).takeIf { it >= 0 } ?: 0
+        items.add(SettingItem.SettingEntry(
+            stableId = id,
+            nameResId = nameRes,
+            value = labels[selected],
+            onClick = {
+                MaterialAlertDialogBuilder(requireContext(), R.style.DarkAlertDialog)
+                    .setTitle(nameRes)
+                    .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, which ->
+                        save(choices[which])
+                        settings.commit()
+                        dialog.dismiss()
+                        updateSettingsList()
+                    }
+                    .show()
+            }
+        ))
     }
 
     private fun notifyChange(needsViewRecreate: Boolean = false, needsAudioRestart: Boolean = false, sensorRefresh: Boolean = false, applyFullscreen: Boolean = false) {
